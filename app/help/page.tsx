@@ -1,33 +1,39 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
 import {
-  HelpCircle,
   Search,
-  Book,
-  Video,
+  BookOpen,
   MessageCircle,
-  Mail,
   Phone,
-  ExternalLink,
-  Star,
+  Mail,
+  Video,
+  HelpCircle,
   ThumbsUp,
   ThumbsDown,
+  ExternalLink,
+  Clock,
+  Users,
+  Star,
+  Play,
 } from "lucide-react"
 
 interface HelpArticle {
   id: string
   title: string
-  description: string
+  content: string
   category: string
-  views: number
+  tags: string[]
   helpful: number
+  notHelpful: number
   lastUpdated: string
 }
 
@@ -37,48 +43,65 @@ interface FAQ {
   answer: string
   category: string
   helpful: number
+  notHelpful: number
+}
+
+interface VideoTutorial {
+  id: string
+  title: string
+  description: string
+  duration: string
+  thumbnail: string
+  category: string
+  views: number
+  rating: number
 }
 
 export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
+  const [activeTab, setActiveTab] = useState("articles")
 
+  // Mock data
   const helpArticles: HelpArticle[] = [
     {
       id: "1",
       title: "Getting Started with Project Hub",
-      description: "Learn the basics of navigating and using Project Hub effectively",
+      content: "Learn how to navigate the platform, create your profile, and start your first project...",
       category: "Getting Started",
-      views: 1250,
-      helpful: 98,
-      lastUpdated: "2024-01-10",
+      tags: ["basics", "setup", "profile"],
+      helpful: 45,
+      notHelpful: 3,
+      lastUpdated: "2024-01-15",
     },
     {
       id: "2",
-      title: "How to Find and Apply for Projects",
-      description: "Step-by-step guide to discovering and applying for projects that match your interests",
+      title: "How to Submit a Project Proposal",
+      content: "Step-by-step guide on creating and submitting your project proposal for approval...",
       category: "Projects",
-      views: 890,
-      helpful: 87,
-      lastUpdated: "2024-01-08",
+      tags: ["project", "proposal", "submission"],
+      helpful: 38,
+      notHelpful: 2,
+      lastUpdated: "2024-01-18",
     },
     {
       id: "3",
       title: "Using the AI Assistant Effectively",
-      description: "Tips and tricks for getting the most out of your AI assistant conversations",
+      content: "Tips and tricks for getting the most out of your AI assistant conversations...",
       category: "AI Assistant",
-      views: 756,
-      helpful: 92,
-      lastUpdated: "2024-01-12",
+      tags: ["ai", "chat", "tips"],
+      helpful: 52,
+      notHelpful: 1,
+      lastUpdated: "2024-01-20",
     },
     {
       id: "4",
-      title: "Managing Your Project Milestones",
-      description: "Best practices for tracking progress and meeting deadlines",
+      title: "Managing Project Milestones",
+      content: "Learn how to create, track, and complete project milestones effectively...",
       category: "Milestones",
-      views: 634,
-      helpful: 85,
-      lastUpdated: "2024-01-05",
+      tags: ["milestones", "tracking", "progress"],
+      helpful: 29,
+      notHelpful: 4,
+      lastUpdated: "2024-01-12",
     },
   ]
 
@@ -87,363 +110,472 @@ export default function HelpPage() {
       id: "1",
       question: "How do I reset my password?",
       answer:
-        "You can reset your password by clicking the 'Forgot Password' link on the login page. Enter your email address and follow the instructions sent to your inbox.",
+        'You can reset your password by clicking the "Forgot Password" link on the login page. Enter your email address and follow the instructions sent to your email.',
       category: "Account",
-      helpful: 45,
+      helpful: 67,
+      notHelpful: 2,
     },
     {
       id: "2",
-      question: "Can I work on multiple projects at once?",
+      question: "Can I change my project supervisor?",
       answer:
-        "Yes, you can participate in multiple projects simultaneously. However, make sure you can manage your time effectively and meet all project requirements.",
+        "Yes, you can request a supervisor change by contacting the admin team through the support system. Please provide a valid reason for the change request.",
       category: "Projects",
-      helpful: 38,
+      helpful: 34,
+      notHelpful: 8,
     },
     {
       id: "3",
-      question: "How does the AI assistant work?",
+      question: "How long does project approval take?",
       answer:
-        "The AI assistant uses advanced language models to help answer your questions about projects, provide guidance, and assist with academic tasks. It learns from your interactions to provide more personalized help.",
-      category: "AI Assistant",
-      helpful: 52,
+        "Project approval typically takes 3-5 business days. You will receive a notification once your project has been reviewed and approved or if any changes are needed.",
+      category: "Projects",
+      helpful: 89,
+      notHelpful: 3,
     },
     {
       id: "4",
-      question: "What should I do if I'm falling behind on milestones?",
+      question: "Is my data secure on the platform?",
       answer:
-        "If you're struggling with milestones, reach out to your supervisor immediately. You can also use the AI assistant for guidance and consider adjusting your project timeline if necessary.",
-      category: "Milestones",
-      helpful: 41,
+        "Yes, we take data security seriously. All data is encrypted in transit and at rest. We follow industry best practices for data protection and privacy.",
+      category: "Security",
+      helpful: 45,
+      notHelpful: 1,
     },
     {
       id: "5",
-      question: "How do I contact my supervisor?",
+      question: "Can I collaborate with other students?",
       answer:
-        "You can contact your supervisor through the messaging system in Project Hub, or use the contact information provided in your project details.",
-      category: "Communication",
-      helpful: 33,
+        "Yes, the platform supports collaboration features. You can share projects, work on group assignments, and communicate with peers through the messaging system.",
+      category: "Collaboration",
+      helpful: 56,
+      notHelpful: 4,
     },
   ]
 
-  const videoTutorials = [
+  const videoTutorials: VideoTutorial[] = [
     {
       id: "1",
-      title: "Project Hub Overview",
-      duration: "5:30",
+      title: "Platform Overview and Navigation",
+      description: "A comprehensive tour of the Project Hub platform and its main features.",
+      duration: "8:45",
       thumbnail: "/placeholder.svg?height=120&width=200",
-      views: 2340,
+      category: "Getting Started",
+      views: 1234,
+      rating: 4.8,
     },
     {
       id: "2",
-      title: "Finding Your Perfect Project",
-      duration: "8:15",
+      title: "Creating Your First Project",
+      description: "Step-by-step walkthrough of creating and submitting your first project proposal.",
+      duration: "12:30",
       thumbnail: "/placeholder.svg?height=120&width=200",
-      views: 1890,
+      category: "Projects",
+      views: 987,
+      rating: 4.6,
     },
     {
       id: "3",
-      title: "AI Assistant Best Practices",
-      duration: "6:45",
+      title: "Mastering the AI Assistant",
+      description: "Learn advanced techniques for getting better responses from the AI assistant.",
+      duration: "15:20",
       thumbnail: "/placeholder.svg?height=120&width=200",
-      views: 1567,
+      category: "AI Assistant",
+      views: 756,
+      rating: 4.9,
     },
     {
       id: "4",
-      title: "Milestone Management Tips",
-      duration: "7:20",
+      title: "Milestone Management Best Practices",
+      description: "Tips for effectively planning and tracking your project milestones.",
+      duration: "10:15",
       thumbnail: "/placeholder.svg?height=120&width=200",
-      views: 1234,
+      category: "Milestones",
+      views: 543,
+      rating: 4.7,
     },
   ]
 
-  const categories = ["all", "Getting Started", "Projects", "AI Assistant", "Milestones", "Account", "Communication"]
-
-  const filteredArticles = helpArticles.filter((article) => {
-    const matchesSearch =
-      searchQuery === "" ||
+  const filteredArticles = helpArticles.filter(
+    (article) =>
       article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || article.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+      article.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      article.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())),
+  )
 
-  const filteredFAQs = faqs.filter((faq) => {
-    const matchesSearch =
-      searchQuery === "" ||
+  const filteredFAQs = faqs.filter(
+    (faq) =>
       faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || faq.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+      faq.answer.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
+
+  const filteredVideos = videoTutorials.filter(
+    (video) =>
+      video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      video.description.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-foreground flex items-center justify-center gap-2">
-            <HelpCircle className="h-8 w-8" />
-            Help & Support
-          </h1>
-          <p className="text-muted-foreground mt-2">Find answers to your questions and get the help you need</p>
-        </div>
+    <div className="container py-8 space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <h1 className="text-3xl font-bold text-[#534D56] dark:text-[#F8F1FF] flex items-center justify-center gap-3">
+          <HelpCircle className="h-8 w-8" />
+          Help & Support
+        </h1>
+        <p className="text-[#656176] dark:text-[#DECDF5] max-w-2xl mx-auto">
+          Find answers to your questions, learn how to use the platform, and get support when you need it.
+        </p>
+      </div>
 
-        {/* Search */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search for help articles, FAQs, or tutorials..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Search */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search for help articles, FAQs, or tutorials..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6 text-center">
-              <MessageCircle className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Live Chat</h3>
-              <p className="text-sm text-muted-foreground mb-4">Get instant help from our support team</p>
-              <Button className="w-full">Start Chat</Button>
-            </CardContent>
-          </Card>
+      {/* Help Content Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="articles" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Articles ({filteredArticles.length})
+          </TabsTrigger>
+          <TabsTrigger value="faqs" className="flex items-center gap-2">
+            <HelpCircle className="h-4 w-4" />
+            FAQs ({filteredFAQs.length})
+          </TabsTrigger>
+          <TabsTrigger value="videos" className="flex items-center gap-2">
+            <Video className="h-4 w-4" />
+            Videos ({filteredVideos.length})
+          </TabsTrigger>
+          <TabsTrigger value="contact" className="flex items-center gap-2">
+            <MessageCircle className="h-4 w-4" />
+            Contact
+          </TabsTrigger>
+        </TabsList>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6 text-center">
-              <Mail className="h-12 w-12 text-green-600 mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Email Support</h3>
-              <p className="text-sm text-muted-foreground mb-4">Send us a detailed message about your issue</p>
-              <Button variant="outline" className="w-full bg-transparent">
-                Send Email
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6 text-center">
-              <Phone className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Phone Support</h3>
-              <p className="text-sm text-muted-foreground mb-4">Call us during business hours</p>
-              <Button variant="outline" className="w-full bg-transparent">
-                Call Now
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Content Tabs */}
-        <Tabs defaultValue="articles" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="articles" className="flex items-center gap-2">
-              <Book className="h-4 w-4" />
-              Articles
-            </TabsTrigger>
-            <TabsTrigger value="faqs" className="flex items-center gap-2">
-              <HelpCircle className="h-4 w-4" />
-              FAQs
-            </TabsTrigger>
-            <TabsTrigger value="videos" className="flex items-center gap-2">
-              <Video className="h-4 w-4" />
-              Videos
-            </TabsTrigger>
-            <TabsTrigger value="contact" className="flex items-center gap-2">
-              <MessageCircle className="h-4 w-4" />
-              Contact
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Category Filter */}
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category === "all" ? "All Categories" : category}
-              </Button>
+        {/* Help Articles */}
+        <TabsContent value="articles" className="space-y-4">
+          <div className="grid gap-4">
+            {filteredArticles.map((article) => (
+              <Card key={article.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <CardTitle className="text-lg">{article.title}</CardTitle>
+                      <CardDescription>{article.content}</CardDescription>
+                    </div>
+                    <Badge variant="secondary">{article.category}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-sm text-[#656176] dark:text-[#DECDF5]">
+                      <div className="flex flex-wrap gap-1">
+                        {article.tags.map((tag, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Updated {new Date(article.lastUpdated).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 text-sm">
+                        <ThumbsUp className="h-4 w-4 text-green-600" />
+                        <span>{article.helpful}</span>
+                        <ThumbsDown className="h-4 w-4 text-red-600" />
+                        <span>{article.notHelpful}</span>
+                      </div>
+                      <Button size="sm" variant="outline" className="gap-2 bg-transparent">
+                        Read More
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
+        </TabsContent>
 
-          {/* Help Articles */}
-          <TabsContent value="articles" className="space-y-4">
-            {filteredArticles.length === 0 ? (
-              <div className="text-center py-8">
-                <Book className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium">No articles found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or category filter</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredArticles.map((article) => (
-                  <Card key={article.id} className="hover:shadow-md transition-shadow cursor-pointer">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <Badge variant="secondary">{article.category}</Badge>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          {article.helpful}%
+        {/* FAQs */}
+        <TabsContent value="faqs" className="space-y-4">
+          <Accordion type="single" collapsible className="space-y-4">
+            {filteredFAQs.map((faq) => (
+              <Card key={faq.id}>
+                <AccordionItem value={faq.id} className="border-none">
+                  <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-left font-medium">{faq.question}</span>
+                      <Badge variant="secondary" className="ml-4">
+                        {faq.category}
+                      </Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-6 pb-4">
+                    <div className="space-y-4">
+                      <p className="text-[#656176] dark:text-[#DECDF5]">{faq.answer}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm text-[#656176] dark:text-[#DECDF5]">Was this helpful?</span>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline" className="gap-1 bg-transparent">
+                              <ThumbsUp className="h-3 w-3" />
+                              Yes ({faq.helpful})
+                            </Button>
+                            <Button size="sm" variant="outline" className="gap-1 bg-transparent">
+                              <ThumbsDown className="h-3 w-3" />
+                              No ({faq.notHelpful})
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      <CardTitle className="text-lg">{article.title}</CardTitle>
-                      <CardDescription>{article.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>{article.views} views</span>
-                        <span>Updated {new Date(article.lastUpdated).toLocaleDateString()}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Card>
+            ))}
+          </Accordion>
+        </TabsContent>
 
-          {/* FAQs */}
-          <TabsContent value="faqs" className="space-y-4">
-            {filteredFAQs.length === 0 ? (
-              <div className="text-center py-8">
-                <HelpCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium">No FAQs found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or category filter</p>
-              </div>
-            ) : (
-              <Card>
+        {/* Video Tutorials */}
+        <TabsContent value="videos" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredVideos.map((video) => (
+              <Card key={video.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-0">
-                  <Accordion type="single" collapsible className="w-full">
-                    {filteredFAQs.map((faq) => (
-                      <AccordionItem key={faq.id} value={faq.id}>
-                        <AccordionTrigger className="px-6 py-4 text-left">
-                          <div className="flex items-center justify-between w-full mr-4">
-                            <span>{faq.question}</span>
-                            <Badge variant="outline">{faq.category}</Badge>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-6 pb-4">
-                          <p className="text-muted-foreground mb-4">{faq.answer}</p>
-                          <div className="flex items-center gap-4">
-                            <span className="text-sm text-muted-foreground">Was this helpful?</span>
-                            <div className="flex items-center gap-2">
-                              <Button size="sm" variant="ghost">
-                                <ThumbsUp className="h-4 w-4" />
-                              </Button>
-                              <Button size="sm" variant="ghost">
-                                <ThumbsDown className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <span className="text-sm text-muted-foreground ml-auto">
-                              {faq.helpful} people found this helpful
-                            </span>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* Video Tutorials */}
-          <TabsContent value="videos" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {videoTutorials.map((video) => (
-                <Card key={video.id} className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardContent className="p-0">
-                    <div className="relative">
-                      <img
-                        src={video.thumbnail || "/placeholder.svg"}
-                        alt={video.title}
-                        className="w-full h-32 object-cover rounded-t-lg"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-t-lg">
-                        <Video className="h-12 w-12 text-white" />
+                  <div className="relative">
+                    <img
+                      src={video.thumbnail || "/placeholder.svg"}
+                      alt={video.title}
+                      className="w-full h-48 object-cover rounded-t-lg"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-t-lg">
+                      <Button size="lg" className="rounded-full bg-white/90 text-black hover:bg-white">
+                        <Play className="h-6 w-6" />
+                      </Button>
+                    </div>
+                    <Badge className="absolute top-2 right-2 bg-black/70 text-white">{video.duration}</Badge>
+                  </div>
+                  <div className="p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <h3 className="font-semibold text-[#534D56] dark:text-[#F8F1FF] line-clamp-2">{video.title}</h3>
+                      <Badge variant="secondary">{video.category}</Badge>
+                    </div>
+                    <p className="text-sm text-[#656176] dark:text-[#DECDF5] line-clamp-2">{video.description}</p>
+                    <div className="flex items-center justify-between text-sm text-[#656176] dark:text-[#DECDF5]">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {video.views.toLocaleString()} views
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Star className="h-3 w-3 text-yellow-500" />
+                          {video.rating}
+                        </div>
                       </div>
-                      <Badge className="absolute bottom-2 right-2 bg-black bg-opacity-75">{video.duration}</Badge>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold mb-2">{video.title}</h3>
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>{video.views} views</span>
-                        <ExternalLink className="h-4 w-4" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          {/* Contact Information */}
-          <TabsContent value="contact" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Contact Information</CardTitle>
-                  <CardDescription>Get in touch with our support team</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Email Support</p>
-                      <p className="text-sm text-muted-foreground">support@projecthub.edu</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Phone className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Phone Support</p>
-                      <p className="text-sm text-muted-foreground">+1 (555) 123-4567</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <MessageCircle className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Live Chat</p>
-                      <p className="text-sm text-muted-foreground">Available 24/7</p>
+                      <Button size="sm" variant="outline">
+                        Watch Now
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+            ))}
+          </div>
+        </TabsContent>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Support Hours</CardTitle>
-                  <CardDescription>When our team is available to help</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span>Monday - Friday</span>
-                    <span className="text-muted-foreground">9:00 AM - 6:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Saturday</span>
-                    <span className="text-muted-foreground">10:00 AM - 4:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Sunday</span>
-                    <span className="text-muted-foreground">Closed</span>
-                  </div>
-                  <div className="pt-3 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Live chat and email support are available 24/7. Phone support follows the hours above.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+        {/* Contact Support */}
+        <TabsContent value="contact" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Live Chat */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-blue-600" />
+                  Live Chat
+                </CardTitle>
+                <CardDescription>Get instant help from our support team</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-green-600">Available now</span>
+                </div>
+                <p className="text-sm text-[#656176] dark:text-[#DECDF5]">Average response time: 2 minutes</p>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700">Start Chat</Button>
+              </CardContent>
+            </Card>
+
+            {/* Email Support */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5 text-green-600" />
+                  Email Support
+                </CardTitle>
+                <CardDescription>Send us a detailed message</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2 text-sm text-[#656176] dark:text-[#DECDF5]">
+                  <p>support@projecthub.ui.edu.ng</p>
+                  <p>Response time: 24 hours</p>
+                </div>
+                <Button variant="outline" className="w-full bg-transparent">
+                  Send Email
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Phone Support */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Phone className="h-5 w-5 text-purple-600" />
+                  Phone Support
+                </CardTitle>
+                <CardDescription>Speak directly with our team</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2 text-sm text-[#656176] dark:text-[#DECDF5]">
+                  <p>+234 (0) 2 810 1055</p>
+                  <p>Mon-Fri: 8:00 AM - 6:00 PM</p>
+                </div>
+                <Button variant="outline" className="w-full bg-transparent">
+                  Call Now
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Contact Form */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Send us a Message</CardTitle>
+              <CardDescription>Fill out the form below and we'll get back to you as soon as possible</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ContactForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
+  )
+}
+
+// Contact Form Component
+function ContactForm() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    category: "general",
+    message: "",
+  })
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      // Mock API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        subject: "",
+        category: "general",
+        message: "",
+      })
+
+      // Show success message (you can use toast here)
+      alert("Message sent successfully! We'll get back to you soon.")
+    } catch (error) {
+      alert("Failed to send message. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Name</label>
+          <Input
+            value={formData.name}
+            onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Email</label>
+          <Input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Subject</label>
+        <Input
+          value={formData.subject}
+          onChange={(e) => setFormData((prev) => ({ ...prev, subject: e.target.value }))}
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Category</label>
+        <select
+          className="w-full p-2 border rounded-md"
+          value={formData.category}
+          onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
+        >
+          <option value="general">General Inquiry</option>
+          <option value="technical">Technical Support</option>
+          <option value="account">Account Issues</option>
+          <option value="project">Project Help</option>
+          <option value="bug">Bug Report</option>
+          <option value="feature">Feature Request</option>
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Message</label>
+        <textarea
+          className="w-full p-2 border rounded-md min-h-[120px]"
+          value={formData.message}
+          onChange={(e) => setFormData((prev) => ({ ...prev, message: e.target.value }))}
+          placeholder="Please describe your issue or question in detail..."
+          required
+        />
+      </div>
+
+      <Button type="submit" disabled={loading} className="w-full">
+        {loading ? "Sending..." : "Send Message"}
+      </Button>
+    </form>
   )
 }
