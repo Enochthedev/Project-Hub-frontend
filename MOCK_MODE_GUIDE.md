@@ -5,19 +5,19 @@ This guide explains how to run the Project Hub frontend in standalone mode witho
 ## 🚀 Quick Start
 
 ### Option 1: Mock Mode (Recommended)
-```bash
+\`\`\`bash
 # Run frontend with mock API
 pnpm dev:mock
-```
+\`\`\`
 
 ### Option 2: Manual Setup
-```bash
+\`\`\`bash
 # Copy mock environment
 cp .env.mock .env.local
 
 # Start development server
 pnpm dev
-```
+\`\`\`
 
 ## 🎯 What Mock Mode Provides
 
@@ -41,13 +41,13 @@ pnpm dev
 ## 🔧 Configuration
 
 ### Environment Variables
-```bash
+\`\`\`bash
 # .env.mock
 NEXT_PUBLIC_USE_MOCK_API=true
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
 NEXT_PUBLIC_MOCK_DELAY=500        # Response delay (ms)
 NEXT_PUBLIC_MOCK_ERROR_RATE=0     # Error simulation (0-1)
-```
+\`\`\`
 
 ### Customizing Mock Data
 Edit `lib/mocks/handlers.ts` to:
@@ -65,7 +65,7 @@ When running in mock mode, you'll see:
 
 ## 📋 Available Scripts
 
-```bash
+\`\`\`bash
 # Development with backend
 pnpm dev:backend
 
@@ -80,16 +80,16 @@ pnpm build
 
 # Run tests with mock API
 pnpm test
-```
+\`\`\`
 
 ## 🔍 Testing Different Scenarios
 
 ### 1. **Authentication Flow**
-```javascript
+\`\`\`javascript
 // Login with any @ui.edu.ng email
 email: "john@ui.edu.ng"
 password: "any-password"
-```
+\`\`\`
 
 ### 2. **Project Search**
 - Search for "AI", "Library", "Portal"
@@ -109,7 +109,7 @@ password: "any-password"
 ## 🛠 Customization Examples
 
 ### Adding New Mock Projects
-```typescript
+\`\`\`typescript
 // lib/mocks/handlers.ts
 const mockProjects = [
   {
@@ -121,10 +121,10 @@ const mockProjects = [
     // ... more fields
   }
 ]
-```
+\`\`\`
 
 ### Simulating API Errors
-```typescript
+\`\`\`typescript
 // Return error for specific endpoints
 http.get('/api/projects/:id', ({ params }) => {
   if (params.id === 'error-test') {
@@ -132,10 +132,10 @@ http.get('/api/projects/:id', ({ params }) => {
   }
   // ... normal response
 })
-```
+\`\`\`
 
 ### Custom AI Responses
-```typescript
+\`\`\`typescript
 http.post('/api/ai/chat', async ({ request }) => {
   const { message } = await request.json()
   
@@ -147,7 +147,7 @@ http.post('/api/ai/chat', async ({ request }) => {
   
   // Default response
 })
-```
+\`\`\`
 
 ## 🎯 Use Cases
 
@@ -178,18 +178,18 @@ http.post('/api/ai/chat', async ({ request }) => {
 ## 🔄 Switching Between Modes
 
 ### To Backend Mode:
-```bash
+\`\`\`bash
 pnpm dev:backend
 # or
 cp .env.development .env.local && pnpm dev
-```
+\`\`\`
 
 ### To Mock Mode:
-```bash
+\`\`\`bash
 pnpm dev:mock
 # or
 cp .env.mock .env.local && pnpm dev
-```
+\`\`\`
 
 ## 🐛 Troubleshooting
 
@@ -217,7 +217,7 @@ cp .env.mock .env.local && pnpm dev
 4. **Visual indicators** show mock mode status
 
 ### File Structure:
-```
+\`\`\`
 lib/mocks/
 ├── handlers.ts          # API endpoint handlers
 ├── browser.ts          # Browser MSW setup
@@ -229,7 +229,7 @@ components/providers/
 
 .env.mock               # Mock mode configuration
 .env.development        # Backend mode configuration
-```
+\`\`\`
 
 ## 🎉 Benefits
 

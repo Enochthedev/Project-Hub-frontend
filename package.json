@@ -5,8 +5,8 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "dev:mock": "cp .env.mock .env.local && next dev",
     "dev:backend": "cp .env.development .env.local && next dev",
+    "dev:mock": "cp .env.mock .env.local && next dev",
     "lint": "next lint",
     "start": "next start",
     "test": "jest",

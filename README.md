@@ -41,7 +41,7 @@ A modern, responsive frontend for the Project Hub platform built with Next.js, T
 - pnpm (recommended) or npm
 
 ### Installation
-```bash
+\`\`\`bash
 # Clone the repository
 git clone https://github.com/Enochthedev/Project-Hub-frontend.git
 cd Project-Hub-frontend
@@ -51,25 +51,25 @@ pnpm install
 
 # Start development server
 pnpm dev
-```
+\`\`\`
 
 ### Development Modes
 
 #### 🎭 **Mock API Mode (Recommended for Development)**
-```bash
+\`\`\`bash
 # Run with mock API (no backend needed)
 pnpm dev:mock
-```
+\`\`\`
 
 #### 🔗 **Backend Mode**
-```bash
+\`\`\`bash
 # Run with real backend
 pnpm dev:backend
-```
+\`\`\`
 
 ## 📋 Available Scripts
 
-```bash
+\`\`\`bash
 # Development
 pnpm dev              # Normal development
 pnpm dev:mock         # Development with mock API
@@ -86,7 +86,7 @@ pnpm test:coverage    # Run tests with coverage
 
 # Linting
 pnpm lint             # Run ESLint
-```
+\`\`\`
 
 ## 🎭 Mock API Mode
 
@@ -99,14 +99,14 @@ Perfect for development without backend setup:
 - **Easy Configuration** - Environment-based switching
 
 ### Usage
-```bash
+\`\`\`bash
 # Quick start with mock API
 pnpm dev:mock
 
 # Manual configuration
 cp .env.mock .env.local
 pnpm dev
-```
+\`\`\`
 
 See [MOCK_MODE_GUIDE.md](./MOCK_MODE_GUIDE.md) for detailed documentation.
 
@@ -115,26 +115,26 @@ See [MOCK_MODE_GUIDE.md](./MOCK_MODE_GUIDE.md) for detailed documentation.
 ### Environment Variables
 
 #### Mock Mode (`.env.mock`)
-```bash
+\`\`\`bash
 NEXT_PUBLIC_USE_MOCK_API=true
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
-```
+\`\`\`
 
 #### Backend Mode (`.env.development`)
-```bash
+\`\`\`bash
 NEXT_PUBLIC_USE_MOCK_API=false
 NEXT_PUBLIC_API_URL=http://localhost:3001
-```
+\`\`\`
 
 #### Production (`.env.production`)
-```bash
+\`\`\`bash
 NEXT_PUBLIC_USE_MOCK_API=false
 NEXT_PUBLIC_API_URL=https://project-hub-backend.onrender.com
-```
+\`\`\`
 
 ## 📁 Project Structure
 
-```
+\`\`\`
 ├── app/                    # Next.js App Router pages
 ├── components/            # Reusable UI components
 │   ├── ui/               # shadcn/ui components
@@ -150,7 +150,7 @@ NEXT_PUBLIC_API_URL=https://project-hub-backend.onrender.com
 │   └── validations/      # Zod validation schemas
 ├── public/               # Static assets
 └── __tests__/            # Test files
-```
+\`\`\`
 
 ## 🎨 UI Components
 
@@ -177,7 +177,7 @@ Built with **shadcn/ui** and **Tailwind CSS**:
 
 ## 🧪 Testing
 
-```bash
+\`\`\`bash
 # Run all tests
 pnpm test
 
@@ -186,7 +186,7 @@ pnpm test:watch
 
 # Coverage report
 pnpm test:coverage
-```
+\`\`\`
 
 ### Test Structure
 - **Unit Tests** - Component and utility testing
@@ -196,19 +196,19 @@ pnpm test:coverage
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
-```bash
+\`\`\`bash
 # Deploy to Vercel
 vercel --prod
-```
+\`\`\`
 
 ### Manual Deployment
-```bash
+\`\`\`bash
 # Build for production
 pnpm build
 
 # Start production server
 pnpm start
-```
+\`\`\`
 
 ## 🔗 Related Repositories
 

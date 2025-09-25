@@ -17,7 +17,7 @@
 ### 2. Push Backend Code to New Repository
 After creating the repository, run these commands:
 
-```bash
+\`\`\`bash
 # Make sure you're on the backend-only branch
 git checkout backend-only
 
@@ -26,7 +26,7 @@ git remote add backend-repo https://github.com/Enochthedev/ProjectHub-backend.gi
 
 # Push the backend code to the new repository
 git push backend-repo backend-only:main
-```
+\`\`\`
 
 ### 3. Verify New Repository
 The new repository should contain:
@@ -45,7 +45,7 @@ The new repository should contain:
 ### 5. Clean Up Frontend Repository
 After successful backend deployment:
 
-```bash
+\`\`\`bash
 # Switch back to main branch
 git checkout main
 
@@ -53,13 +53,13 @@ git checkout main
 git rm -rf backend/
 git commit -m "Remove backend - moved to separate repository"
 git push origin main
-```
+\`\`\`
 
 ### 6. Update Frontend API Configuration
 Update `.env.development` to point to the new backend URL:
-```bash
+\`\`\`bash
 NEXT_PUBLIC_API_URL=https://your-backend-name.onrender.com
-```
+\`\`\`
 
 ## Benefits of Separation
 - ✅ Clean repository structure

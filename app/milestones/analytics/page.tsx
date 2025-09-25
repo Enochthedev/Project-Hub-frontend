@@ -1,11 +1,29 @@
-import { Metadata } from 'next'
-import { MilestoneAnalytics } from '@/components/milestones/milestone-analytics'
-import { MilestoneProgressComparison } from '@/components/milestones/milestone-progress-comparison'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import type { Metadata } from "next"
+import { Suspense } from "react"
+import { MilestoneAnalytics } from "@/components/milestones/milestone-analytics"
+import { MilestoneProgressComparison } from "@/components/milestones/milestone-progress-comparison"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata: Metadata = {
-  title: 'Milestone Analytics | FYP Platform',
-  description: 'Analyze your milestone progress with detailed analytics and comparisons'
+  title: "Milestone Analytics | FYP Platform",
+  description: "Analyze your milestone progress with detailed analytics and comparisons",
+}
+
+function AnalyticsTabContent() {
+  return (
+    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+      <MilestoneAnalytics />
+    </Suspense>
+  )
+}
+
+function ComparisonTabContent() {
+  return (
+    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+      <MilestoneProgressComparison />
+    </Suspense>
+  )
 }
 
 export default function MilestoneAnalyticsPage() {
@@ -26,13 +44,13 @@ export default function MilestoneAnalyticsPage() {
             <TabsTrigger value="overview">Progress Overview</TabsTrigger>
             <TabsTrigger value="comparison">Progress Comparison</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="overview" className="mt-6">
-            <MilestoneAnalytics />
+            <AnalyticsTabContent />
           </TabsContent>
-          
+
           <TabsContent value="comparison" className="mt-6">
-            <MilestoneProgressComparison />
+            <ComparisonTabContent />
           </TabsContent>
         </Tabs>
       </div>
