@@ -213,7 +213,16 @@ pnpm start
 ## 🔗 Related Repositories
 
 - **Backend**: [ProjectHub-backend](https://github.com/Enochthedev/ProjectHub-backend)
-- **Documentation**: See individual component README files
+- **Frontend**: [Project-Hub-frontend](https://github.com/Enochthedev/Project-Hub-frontend) (this repository)
+
+## 🚀 Deployment URLs
+
+- **Frontend**: https://project-hub-frontend.vercel.app (Vercel)
+- **Backend**: https://project-hub-backend.onrender.com (Render)
+
+## 📋 Repository Structure
+
+This is the **frontend-only** repository. The backend has been moved to a separate repository for better organization and independent deployment.
 
 ## 🤝 Contributing
 
