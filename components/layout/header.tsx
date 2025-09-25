@@ -1,378 +1,237 @@
 "use client"
 
+import type React from "react"
+import { useState } from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
+import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ModeToggle } from "@/components/layout/mode-toggle"
-import { ChevronDown, Github, User, LogOut, Settings, BookMarked } from "lucide-react"
-import { useState, useEffect } from "react"
-import { useMobile } from "@/hooks/use-mobile"
-import { ResponsiveContainer } from "@/components/ui/responsive-container"
-import { TouchButton } from "@/components/ui/touch-button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Menu } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import {
+  Menu,
+  Search,
+  Bell,
+  User,
+  Settings,
+  LogOut,
+  BookmarkPlus,
+  Bot,
+  Target,
+  Lightbulb,
+  Users,
+  BarChart3,
+  Shield,
+  Home,
+  FolderOpen,
+  MessageSquare,
+} from "lucide-react"
 import { useAuthStore } from "@/lib/stores/auth-store"
-
-const mainNavItems = [
-  { name: "Home", href: "/" },
-  {
-    name: "Projects",
-    href: "/explore",
-    children: [
-      { name: "Explore All", href: "/explore" },
-      { name: "Trending", href: "/explore?filter=trending" },
-      { name: "New Additions", href: "/explore?filter=new" },
-    ],
-  },
-  {
-    name: "Resources",
-    href: "#",
-    children: [
-      { name: "Tutorials", href: "/resources/tutorials" },
-      { name: "Documentation", href: "/resources/docs" },
-      { name: "Community", href: "/resources/community" },
-    ],
-  },
-]
+import { ModeToggle } from "./mode-toggle"
 
 export function Header() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const { isMobile, isTablet, isMobileSmall } = useMobile()
-  const [scrolled, setScrolled] = useState(false)
   const { user, isAuthenticated, logout } = useAuthStore()
+  const router = useRouter()
+  const pathname = usePathname()
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
   const handleLogout = async () => {
-    try {
-      await logout()
-      router.push('/')
-    } catch (error) {
-      console.error('Logout failed:', error)
+    await logout()
+    router.push("/")
+  }
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+      setSearchQuery("")
+      setIsSearchOpen(false)
     }
   }
 
-  const getUserInitials = () => {
-    if (!user) return 'U'
-    const name = user.studentProfile?.name || user.supervisorProfile?.name || user.email
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  // Role-based navigation items
+  const getNavigationItems = () => {
+    if (!user) return []
+
+    const baseItems = [{ label: "Home", href: "/", icon: Home }]
+
+    switch (user.role) {
+      case "student":
+        return [
+          ...baseItems,
+          { label: "Discover", href: "/projects", icon: Search },
+          { label: "Bookmarks", href: "/bookmarks", icon: BookmarkPlus },
+          { label: "AI Assistant", href: "/ai-assistant", icon: Bot },
+          { label: "Milestones", href: "/milestones", icon: Target },
+          { label: "Recommendations", href: "/recommendations", icon: Lightbulb },
+        ]
+      case "supervisor":
+        return [
+          ...baseItems,
+          { label: "Dashboard", href: "/supervisor", icon: BarChart3 },
+          { label: "My Projects", href: "/supervisor/projects", icon: FolderOpen },
+          { label: "Students", href: "/supervisor/students", icon: Users },
+          { label: "AI Monitoring", href: "/supervisor/ai-monitoring", icon: MessageSquare },
+          { label: "Analytics", href: "/supervisor/analytics", icon: BarChart3 },
+        ]
+      case "admin":
+        return [
+          ...baseItems,
+          { label: "Dashboard", href: "/admin", icon: BarChart3 },
+          { label: "Users", href: "/admin/users", icon: Users },
+          { label: "Projects", href: "/admin/projects", icon: FolderOpen },
+          { label: "AI Management", href: "/admin/ai", icon: Bot },
+          { label: "System", href: "/admin/system", icon: Shield },
+        ]
+      default:
+        return baseItems
+    }
   }
 
-  const getUserName = () => {
-    if (!user) return 'User'
-    return user.studentProfile?.name || user.supervisorProfile?.name || user.email
+  const navigationItems = getNavigationItems()
+
+  if (!isAuthenticated) {
+    return (
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            {/* Logo */}
+            <Link href="/" className="flex items-center space-x-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600 text-white font-bold">
+                P
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xl font-bold text-foreground">ProjectHub</span>
+                <span className="text-xs text-muted-foreground hidden sm:block">FYP Management Platform</span>
+              </div>
+            </Link>
+
+            {/* Auth Buttons */}
+            <div className="flex items-center space-x-4">
+              <ModeToggle />
+              <Link href="/login">
+                <Button variant="ghost">Login</Button>
+              </Link>
+              <Link href="/signup">
+                <Button>Sign Up</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+    )
   }
-
-  // Add scroll effect with cleanup
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
-    }
-
-    // Only add the event listener on the client
-    if (typeof window !== "undefined") {
-      window.addEventListener("scroll", handleScroll)
-      // Initial check
-      handleScroll()
-
-      return () => window.removeEventListener("scroll", handleScroll)
-    }
-  }, [])
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-200",
-        scrolled
-          ? "border-b border-[#DECDF5] bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:border-[#656176] dark:bg-[#534D56]/95 dark:supports-[backdrop-filter]:bg-[#534D56]/80"
-          : "bg-white dark:bg-[#534D56]",
-      )}
-    >
-      <ResponsiveContainer className="flex h-16 items-center justify-between" padding="md">
-        {/* Left side - Logo and Navigation */}
-        <div className="flex items-center space-x-4 md:space-x-6 lg:space-x-10">
-          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90 touch-sm:gap-1">
-            <div className={cn(
-              "relative flex items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[#1B998B] to-[#1B998B]/80 shadow-sm",
-              isMobileSmall ? "h-7 w-7" : "h-8 w-8"
-            )}>
-              <div className="absolute inset-0 opacity-80 mix-blend-overlay">
-                <div className="h-full w-full bg-dots-light dark:bg-dots-dark"></div>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          {/* Left side - Logo and Navigation */}
+          <div className="flex items-center space-x-8">
+            <Link href="/" className="flex items-center space-x-3 transition-opacity hover:opacity-90">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600 text-white font-bold">
+                P
               </div>
-              <span className={cn(
-                "relative font-bold text-white",
-                isMobileSmall ? "text-sm" : "text-lg"
-              )}>PH</span>
-            </div>
-            <span className={cn(
-              "font-bold text-[#534D56] dark:text-[#F8F1FF]",
-              isMobileSmall ? "text-lg" : "text-xl"
-            )}>
-              {isMobileSmall ? "PH" : "Project Hub"}
-            </span>
-          </Link>
+              <div className="flex flex-col">
+                <span className="text-xl font-bold text-foreground">ProjectHub</span>
+                <span className="text-xs text-muted-foreground hidden sm:block">FYP Management Platform</span>
+              </div>
+            </Link>
 
-          {!isMobile && (
-            <nav className="flex items-center gap-4 lg:gap-6">
-              {mainNavItems.map((item) =>
-                item.children ? (
-                  <DropdownMenu key={item.name}>
-                    <DropdownMenuTrigger asChild>
-                      <TouchButton
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          "flex items-center gap-1 text-sm font-medium transition-colors hover:text-[#1B998B] h-auto p-2",
-                          pathname.startsWith(item.href) ? "text-[#1B998B]" : "text-[#656176] dark:text-[#DECDF5]",
-                        )}
-                      >
-                        {item.name} <ChevronDown className="h-4 w-4" />
-                      </TouchButton>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="start"
-                      className="bg-white dark:bg-[#534D56] border-[#DECDF5] dark:border-[#656176]"
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center space-x-1">
+              {navigationItems.map((item) => {
+                const Icon = item.icon
+                const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+                return (
+                  <Link key={item.href} href={item.href}>
+                    <Button
+                      variant={isActive ? "secondary" : "ghost"}
+                      size="sm"
+                      className="flex items-center space-x-2 h-9 px-3"
                     >
-                      {item.children.map((child) => (
-                        <DropdownMenuItem key={child.name} asChild>
-                          <Link
-                            href={child.href}
-                            className="text-[#534D56] dark:text-[#F8F1FF] focus:bg-[#DECDF5]/20 dark:focus:bg-[#656176]/50"
-                          >
-                            {child.name}
-                          </Link>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "text-sm font-medium transition-colors hover:text-[#1B998B]",
-                      pathname === item.href ? "text-[#1B998B]" : "text-[#656176] dark:text-[#DECDF5]",
-                    )}
-                  >
-                    {item.name}
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </Button>
                   </Link>
-                ),
-              )}
+                )
+              })}
             </nav>
-          )}
-        </div>
-
-        {/* Right side - Actions */}
-        <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
-          {!isMobile && isAuthenticated && (
-            <>
-              <TouchButton
-                variant="ghost"
-                size="sm"
-                asChild
-                className={cn(
-                  "text-sm font-medium transition-colors hover:text-[#1B998B] h-auto px-3 py-2",
-                  pathname === "/saved" ? "text-[#1B998B]" : "text-[#656176] dark:text-[#DECDF5]",
-                )}
-              >
-                <Link href="/saved">Saved</Link>
-              </TouchButton>
-              <TouchButton
-                variant="ghost"
-                size="sm"
-                asChild
-                className={cn(
-                  "text-sm font-medium transition-colors hover:text-[#1B998B] h-auto px-3 py-2",
-                  pathname === "/assistant" ? "text-[#1B998B]" : "text-[#656176] dark:text-[#DECDF5]",
-                )}
-              >
-                <Link href="/assistant">
-                  {isTablet ? "AI" : "AI Assistant"}
-                </Link>
-              </TouchButton>
-              <div className="h-4 w-px bg-[#DECDF5] dark:bg-[#656176]"></div>
-            </>
-          )}
-          
-          {!isMobile && (
-            <TouchButton variant="ghost" size="icon" asChild>
-              <Link href="https://github.com" target="_blank" rel="noopener noreferrer">
-                <Github className="h-5 w-5" />
-                <span className="sr-only">GitHub</span>
-              </Link>
-            </TouchButton>
-          )}
-
-          <div className="flex items-center">
-            <ModeToggle />
           </div>
 
-          {isMobile ? (
-            <Sheet>
-              <SheetTrigger asChild>
-                <TouchButton variant="ghost" size="icon" touchSize="large">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Toggle menu</span>
-                </TouchButton>
-              </SheetTrigger>
-              <SheetContent side="right" className="bg-white dark:bg-[#534D56] border-[#DECDF5] dark:border-[#656176] w-[280px] sm:w-[320px]">
-                <nav className="flex flex-col gap-6 mt-8">
-                  {mainNavItems.map((item) => (
-                    <div key={item.name} className="py-2">
-                      {item.children ? (
-                        <>
-                          <div className="mb-3 font-medium text-[#534D56] dark:text-[#F8F1FF] text-base">{item.name}</div>
-                          <div className="flex flex-col pl-4 border-l-2 border-[#DECDF5] dark:border-[#656176] space-y-2">
-                            {item.children.map((child) => (
-                              <TouchButton
-                                key={child.name}
-                                variant="ghost"
-                                size="sm"
-                                asChild
-                                className="justify-start h-auto py-3 px-2 text-sm text-[#656176] dark:text-[#DECDF5] hover:text-[#1B998B] hover:bg-[#DECDF5]/20 dark:hover:bg-[#656176]/20"
-                              >
-                                <Link href={child.href}>
-                                  {child.name}
-                                </Link>
-                              </TouchButton>
-                            ))}
-                          </div>
-                        </>
-                      ) : (
-                        <TouchButton
-                          variant="ghost"
-                          size="sm"
-                          asChild
-                          className={cn(
-                            "justify-start h-auto py-3 px-2 w-full font-medium text-base",
-                            pathname === item.href ? "text-[#1B998B] bg-[#1B998B]/10" : "text-[#534D56] dark:text-[#F8F1FF]",
-                          )}
-                        >
-                          <Link href={item.href}>
-                            {item.name}
-                          </Link>
-                        </TouchButton>
-                      )}
-                    </div>
-                  ))}
-                  {isAuthenticated && (
-                    <>
-                      <div className="py-2">
-                        <TouchButton
-                          variant="ghost"
-                          size="sm"
-                          asChild
-                          className={cn(
-                            "justify-start h-auto py-3 px-2 w-full font-medium text-base",
-                            pathname === "/saved" ? "text-[#1B998B] bg-[#1B998B]/10" : "text-[#534D56] dark:text-[#F8F1FF]",
-                          )}
-                        >
-                          <Link href="/saved">
-                            Saved Projects
-                          </Link>
-                        </TouchButton>
-                      </div>
-                      <div className="py-2">
-                        <TouchButton
-                          variant="ghost"
-                          size="sm"
-                          asChild
-                          className={cn(
-                            "justify-start h-auto py-3 px-2 w-full font-medium text-base",
-                            pathname === "/assistant" ? "text-[#1B998B] bg-[#1B998B]/10" : "text-[#534D56] dark:text-[#F8F1FF]",
-                          )}
-                        >
-                          <Link href="/assistant">
-                            AI Assistant
-                          </Link>
-                        </TouchButton>
-                      </div>
-                    </>
-                  )}
-                  <div className="py-2">
-                    <TouchButton
-                      variant="ghost"
-                      size="sm"
-                      asChild
-                      className="justify-start h-auto py-3 px-2 w-full font-medium text-base text-[#534D56] dark:text-[#F8F1FF]"
-                    >
-                      <Link
-                        href="https://github.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Github className="h-4 w-4 mr-2" /> GitHub
-                      </Link>
-                    </TouchButton>
-                  </div>
-                  {isAuthenticated ? (
-                    <>
-                      <div className="border-t border-[#DECDF5] dark:border-[#656176] my-4"></div>
-                      <div className="py-1">
-                        <div className="py-2 text-sm text-[#656176] dark:text-[#DECDF5]">
-                          {getUserName()}
-                        </div>
-                        <div className="py-1">
-                          <Link
-                            href="/profile"
-                            className="py-2 font-medium text-[#534D56] dark:text-[#F8F1FF] flex items-center gap-2"
-                          >
-                            <User className="h-4 w-4" /> Profile
-                          </Link>
-                        </div>
-                        <div className="py-1">
-                          <Link
-                            href="/settings"
-                            className="py-2 font-medium text-[#534D56] dark:text-[#F8F1FF] flex items-center gap-2"
-                          >
-                            <Settings className="h-4 w-4" /> Settings
-                          </Link>
-                        </div>
-                        <div className="py-1">
-                          <button
-                            onClick={handleLogout}
-                            className="py-2 font-medium text-[#534D56] dark:text-[#F8F1FF] flex items-center gap-2 w-full text-left"
-                          >
-                            <LogOut className="h-4 w-4" /> Log out
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="border-t border-[#DECDF5] dark:border-[#656176] my-6"></div>
-                      <div className="flex flex-col gap-3">
-                        <TouchButton
-                          variant="outline"
-                          size="lg"
-                          asChild
-                          className="border-[#DECDF5] bg-white dark:border-[#656176] dark:bg-transparent w-full"
-                        >
-                          <Link href="/login">Log in</Link>
-                        </TouchButton>
-                        <TouchButton 
-                          size="lg" 
-                          asChild 
-                          className="bg-[#1B998B] hover:bg-[#1B998B]/90 w-full"
-                        >
-                          <Link href="/signup">Sign up</Link>
-                        </TouchButton>
-                      </div>
-                    </>
-                  )}
-                </nav>
-              </SheetContent>
-            </Sheet>
-          ) : isAuthenticated ? (
+          {/* Right side - Search, Notifications, User Menu */}
+          <div className="flex items-center space-x-4">
+            {/* Search */}
+            <div className="hidden md:flex items-center">
+              <form onSubmit={handleSearch} className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search projects, users..."
+                  className="pl-10 pr-4 w-64 h-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </form>
+            </div>
+
+            {/* Mobile Search */}
+            <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setIsSearchOpen(true)}>
+              <Search className="h-4 w-4" />
+            </Button>
+
+            {/* Notifications */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.studentProfile?.profilePicture || user?.supervisorProfile?.profilePicture} alt={getUserName()} />
-                    <AvatarFallback className="bg-[#1B998B] text-white">
-                      {getUserInitials()}
+                <Button variant="ghost" size="sm" className="relative">
+                  <Bell className="h-4 w-4" />
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs bg-red-500 text-white">
+                    3
+                  </Badge>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">Milestone Due Soon</p>
+                    <p className="text-xs text-muted-foreground">Project proposal due in 2 days</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">New Recommendation</p>
+                    <p className="text-xs text-muted-foreground">AI found 3 new projects for you</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">Message from Supervisor</p>
+                    <p className="text-xs text-muted-foreground">Dr. Smith commented on your progress</p>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* User Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                    <AvatarFallback className="bg-teal-600 text-white">
+                      {user.name?.charAt(0)?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -380,62 +239,132 @@ export function Header() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{getUserName()}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user?.email}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground capitalize">
-                      {user?.role}
-                    </p>
+                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    <Badge variant="secondary" className="w-fit text-xs mt-1">
+                      {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
+                    </Badge>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/profile" className="cursor-pointer">
+                  <Link href="/profile" className="flex items-center">
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/saved" className="cursor-pointer">
-                    <BookMarked className="mr-2 h-4 w-4" />
-                    <span>Saved Projects</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="cursor-pointer">
+                  <Link href="/settings" className="flex items-center">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <TouchButton
-                variant="outline"
-                size={isTablet ? "sm" : "default"}
-                asChild
-                className="border-[#DECDF5] bg-white dark:border-[#656176] dark:bg-transparent"
-              >
-                <Link href="/login">Log in</Link>
-              </TouchButton>
-              <TouchButton 
-                size={isTablet ? "sm" : "default"}
-                asChild 
-                className="bg-[#1B998B] hover:bg-[#1B998B]/90"
-              >
-                <Link href="/signup">Sign up</Link>
-              </TouchButton>
-            </div>
-          )}
+
+            {/* Theme Toggle */}
+            <ModeToggle />
+
+            {/* Mobile Menu */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="lg:hidden">
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-80">
+                <div className="flex flex-col space-y-4 mt-6">
+                  <div className="flex items-center space-x-3 pb-4 border-b">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                      <AvatarFallback className="bg-teal-600 text-white">
+                        {user.name?.charAt(0)?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <p className="text-sm font-medium">{user.name}</p>
+                      <Badge variant="secondary" className="w-fit text-xs">
+                        {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Mobile Navigation */}
+                  <nav className="flex flex-col space-y-2">
+                    {navigationItems.map((item) => {
+                      const Icon = item.icon
+                      const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+                      return (
+                        <Link key={item.href} href={item.href}>
+                          <Button
+                            variant={isActive ? "secondary" : "ghost"}
+                            className="w-full justify-start space-x-3 h-12"
+                          >
+                            <Icon className="h-5 w-5" />
+                            <span>{item.label}</span>
+                          </Button>
+                        </Link>
+                      )
+                    })}
+                  </nav>
+
+                  <div className="pt-4 border-t space-y-2">
+                    <Link href="/profile">
+                      <Button variant="ghost" className="w-full justify-start space-x-3">
+                        <User className="h-4 w-4" />
+                        <span>Profile</span>
+                      </Button>
+                    </Link>
+                    <Link href="/settings">
+                      <Button variant="ghost" className="w-full justify-start space-x-3">
+                        <Settings className="h-4 w-4" />
+                        <span>Settings</span>
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start space-x-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Log out</span>
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
-      </ResponsiveContainer>
+      </div>
+
+      {/* Mobile Search Modal */}
+      {isSearchOpen && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm md:hidden">
+          <div className="fixed top-0 left-0 right-0 p-4 bg-background border-b">
+            <form onSubmit={handleSearch} className="flex space-x-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search projects, users..."
+                  className="pl-10 pr-4"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <Button type="button" variant="ghost" onClick={() => setIsSearchOpen(false)}>
+                Cancel
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

@@ -1,280 +1,194 @@
-import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
-import { aiAssistantApi } from '@/lib/api/ai-assistant'
-import { Conversation, Message, AIResponse } from '@/lib/api/types'
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
 
-interface AIAssistantState {
-    // Conversations
-    conversations: Conversation[]
-    currentConversation: Conversation | null
-    isLoadingConversations: boolean
-    conversationError: string | null
-
-    // Messages
-    messages: Message[]
-    isLoadingMessages: boolean
-    messagesError: string | null
-
-    // AI Response
-    isGeneratingResponse: boolean
-    responseError: string | null
-
-    // Search and filters
-    conversationFilters: {
-        status?: 'active' | 'archived' | 'escalated'
-        projectId?: string
-        search?: string
-    }
-    messageFilters: {
-        isBookmarked?: boolean
-        minRating?: number
-        search?: string
-    }
-
-    // Bookmarked messages
-    bookmarkedMessages: Message[]
-    isLoadingBookmarks: boolean
-
-    // Actions
-    loadConversations: () => Promise<void>
-    createConversation: (data: { title?: string; projectId?: string; initialQuery?: string }) => Promise<Conversation>
-    selectConversation: (conversationId: string) => Promise<void>
-    loadMessages: (conversationId: string, offset?: number) => Promise<void>
-    askQuestion: (query: string, conversationId?: string) => Promise<AIResponse>
-    bookmarkMessage: (messageId: string, note?: string) => Promise<void>
-    rateMessage: (messageId: string, rating: number, feedback?: string) => Promise<void>
-    loadBookmarkedMessages: () => Promise<void>
-    searchConversations: (filters: any) => Promise<void>
-    searchMessages: (filters: any) => Promise<void>
-    clearError: () => void
-    reset: () => void
+export interface Message {
+  id: string
+  role: "user" | "assistant"
+  content: string
+  timestamp: Date
+  conversationId: string
 }
 
-const initialState = {
-    conversations: [],
-    currentConversation: null,
-    isLoadingConversations: false,
-    conversationError: null,
-    messages: [],
-    isLoadingMessages: false,
-    messagesError: null,
-    isGeneratingResponse: false,
-    responseError: null,
-    conversationFilters: {},
-    messageFilters: {},
-    bookmarkedMessages: [],
-    isLoadingBookmarks: false,
+export interface Conversation {
+  id: string
+  title: string
+  messages: Message[]
+  createdAt: Date
+  updatedAt: Date
+  projectId?: string
+}
+
+interface AIAssistantState {
+  conversations: Conversation[]
+  currentConversationId: string | null
+  isLoading: boolean
+  error: string | null
+
+  // Actions
+  loadConversations: () => Promise<void>
+  createConversation: (data: { title?: string; projectId?: string; initialQuery?: string }) => Promise<Conversation>
+  deleteConversation: (id: string) => Promise<void>
+  setCurrentConversation: (id: string | null) => void
+  askQuestion: (query: string, conversationId?: string) => Promise<Message>
+  clearError: () => void
+}
+
+// Mock AI responses for development
+const mockResponses = [
+  "That's a great project idea! Here are some suggestions to get you started...",
+  "Based on your requirements, I'd recommend focusing on these key areas...",
+  "Here are some similar projects you might find interesting...",
+  "Consider these technologies for your project stack...",
+  "Here's a potential timeline for your project development...",
+]
+
+const generateMockResponse = (query: string): string => {
+  const responses = mockResponses
+  const randomResponse = responses[Math.floor(Math.random() * responses.length)]
+  return `${randomResponse}\n\nRegarding "${query}", here are some specific recommendations:\n\n• Start with a clear project scope\n• Research existing solutions\n• Plan your technology stack\n• Set realistic milestones\n• Consider user feedback early`
 }
 
 export const useAIAssistantStore = create<AIAssistantState>()(
-    devtools(
-        (set, get) => ({
-            ...initialState,
+  persist(
+    (set, get) => ({
+      conversations: [],
+      currentConversationId: null,
+      isLoading: false,
+      error: null,
 
-            loadConversations: async () => {
-                set({ isLoadingConversations: true, conversationError: null })
-                try {
-                    const { conversationFilters } = get()
-                    const result = await aiAssistantApi.getConversations({
-                        ...conversationFilters,
-                        limit: 50,
-                        offset: 0,
-                    })
-                    set({
-                        conversations: result.conversations,
-                        isLoadingConversations: false
-                    })
-                } catch (error) {
-                    set({
-                        conversationError: error instanceof Error ? error.message : 'Failed to load conversations',
-                        isLoadingConversations: false
-                    })
-                }
-            },
-
-            createConversation: async (data) => {
-                try {
-                    const conversation = await aiAssistantApi.createConversation({
-                        title: data.title,
-                        projectId: data.projectId,
-                        language: 'en',
-                        initialQuery: data.initialQuery,
-                    })
-
-                    set(state => ({
-                        conversations: [conversation, ...state.conversations],
-                        currentConversation: conversation,
-                    }))
-
-                    return conversation
-                } catch (error) {
-                    set({
-                        conversationError: error instanceof Error ? error.message : 'Failed to create conversation'
-                    })
-                    throw error
-                }
-            },
-
-            selectConversation: async (conversationId: string) => {
-                const { conversations } = get()
-                const conversation = conversations.find(c => c.id === conversationId)
-
-                if (conversation) {
-                    set({ currentConversation: conversation })
-                    await get().loadMessages(conversationId)
-                }
-            },
-
-            loadMessages: async (conversationId: string, offset = 0) => {
-                set({ isLoadingMessages: true, messagesError: null })
-                try {
-                    const result = await aiAssistantApi.getConversationMessages(conversationId, 50, offset)
-
-                    set(state => ({
-                        messages: offset === 0 ? result.messages : [...state.messages, ...result.messages],
-                        isLoadingMessages: false
-                    }))
-                } catch (error) {
-                    set({
-                        messagesError: error instanceof Error ? error.message : 'Failed to load messages',
-                        isLoadingMessages: false
-                    })
-                }
-            },
-
-            askQuestion: async (query: string, conversationId?: string) => {
-                set({ isGeneratingResponse: true, responseError: null })
-                try {
-                    const response = await aiAssistantApi.askQuestion({
-                        query,
-                        conversationId,
-                        language: 'en',
-                        includeProjectContext: true,
-                    })
-
-                    // Add user message and AI response to current messages
-                    const userMessage: Message = {
-                        id: `temp-user-${Date.now()}`,
-                        conversationId: conversationId || '',
-                        type: 'user',
-                        content: query,
-                        isBookmarked: false,
-                        status: 'sent',
-                        createdAt: new Date().toISOString(),
-                    }
-
-                    const aiMessage: Message & {
-                        suggestedFollowUps?: string[]
-                        escalationSuggestion?: string
-                        qualityMetrics?: {
-                            helpfulness: number
-                            accuracy: number
-                            clarity: number
-                        }
-                    } = {
-                        id: response.messageId,
-                        conversationId: response.conversationId,
-                        type: 'assistant',
-                        content: response.response,
-                        metadata: response.metadata,
-                        confidenceScore: response.confidenceScore,
-                        sources: response.sources,
-                        isBookmarked: false,
-                        status: 'delivered',
-                        createdAt: new Date().toISOString(),
-                        suggestedFollowUps: response.suggestedFollowUps,
-                        escalationSuggestion: response.escalationSuggestion,
-                        qualityMetrics: response.metadata?.qualityMetrics ? {
-                            helpfulness: response.metadata.qualityMetrics.helpfulness || 0.8,
-                            accuracy: response.metadata.qualityMetrics.accuracy || 0.85,
-                            clarity: response.metadata.qualityMetrics.clarity || 0.9,
-                        } : undefined,
-                    }
-
-                    set(state => ({
-                        messages: [...state.messages, userMessage, aiMessage],
-                        isGeneratingResponse: false
-                    }))
-
-                    return response
-                } catch (error) {
-                    set({
-                        responseError: error instanceof Error ? error.message : 'Failed to generate response',
-                        isGeneratingResponse: false
-                    })
-                    throw error
-                }
-            },
-
-            bookmarkMessage: async (messageId: string, note?: string) => {
-                try {
-                    const updatedMessage = await aiAssistantApi.bookmarkMessage(messageId, note)
-
-                    set(state => ({
-                        messages: state.messages.map(msg =>
-                            msg.id === messageId ? { ...msg, isBookmarked: true } : msg
-                        ),
-                        bookmarkedMessages: [...state.bookmarkedMessages, updatedMessage]
-                    }))
-                } catch (error) {
-                    console.error('Failed to bookmark message:', error)
-                }
-            },
-
-            rateMessage: async (messageId: string, rating: number, feedback?: string) => {
-                try {
-                    const updatedMessage = await aiAssistantApi.rateMessage(messageId, rating, feedback)
-
-                    set(state => ({
-                        messages: state.messages.map(msg =>
-                            msg.id === messageId
-                                ? { ...msg, averageRating: updatedMessage.averageRating, ratingCount: updatedMessage.ratingCount }
-                                : msg
-                        )
-                    }))
-                } catch (error) {
-                    console.error('Failed to rate message:', error)
-                }
-            },
-
-            loadBookmarkedMessages: async () => {
-                set({ isLoadingBookmarks: true })
-                try {
-                    const result = await aiAssistantApi.getBookmarkedMessages(50, 0)
-                    set({
-                        bookmarkedMessages: result.messages,
-                        isLoadingBookmarks: false
-                    })
-                } catch (error) {
-                    set({ isLoadingBookmarks: false })
-                    console.error('Failed to load bookmarked messages:', error)
-                }
-            },
-
-            searchConversations: async (filters) => {
-                set({ conversationFilters: filters })
-                await get().loadConversations()
-            },
-
-            searchMessages: async (filters) => {
-                set({ messageFilters: filters })
-                // Implement message search if needed
-            },
-
-            clearError: () => {
-                set({
-                    conversationError: null,
-                    messagesError: null,
-                    responseError: null
-                })
-            },
-
-            reset: () => {
-                set(initialState)
-            },
-        }),
-        {
-            name: 'ai-assistant-store',
+      loadConversations: async () => {
+        set({ isLoading: true, error: null })
+        try {
+          // In a real app, this would fetch from an API
+          // For now, we'll use the persisted conversations
+          set({ isLoading: false })
+        } catch (error) {
+          set({ error: "Failed to load conversations", isLoading: false })
         }
-    )
+      },
+
+      createConversation: async (data) => {
+        set({ isLoading: true, error: null })
+        try {
+          const conversation: Conversation = {
+            id: `conv_${Date.now()}`,
+            title: data.title || "New Conversation",
+            messages: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            projectId: data.projectId,
+          }
+
+          // If there's an initial query, add it and get a response
+          if (data.initialQuery) {
+            const userMessage: Message = {
+              id: `msg_${Date.now()}`,
+              role: "user",
+              content: data.initialQuery,
+              timestamp: new Date(),
+              conversationId: conversation.id,
+            }
+
+            const assistantMessage: Message = {
+              id: `msg_${Date.now() + 1}`,
+              role: "assistant",
+              content: generateMockResponse(data.initialQuery),
+              timestamp: new Date(),
+              conversationId: conversation.id,
+            }
+
+            conversation.messages = [userMessage, assistantMessage]
+            conversation.title = data.initialQuery.slice(0, 50) + (data.initialQuery.length > 50 ? "..." : "")
+          }
+
+          set((state) => ({
+            conversations: [conversation, ...state.conversations],
+            currentConversationId: conversation.id,
+            isLoading: false,
+          }))
+
+          return conversation
+        } catch (error) {
+          set({ error: "Failed to create conversation", isLoading: false })
+          throw error
+        }
+      },
+
+      deleteConversation: async (id) => {
+        set({ isLoading: true, error: null })
+        try {
+          set((state) => ({
+            conversations: state.conversations.filter((conv) => conv.id !== id),
+            currentConversationId: state.currentConversationId === id ? null : state.currentConversationId,
+            isLoading: false,
+          }))
+        } catch (error) {
+          set({ error: "Failed to delete conversation", isLoading: false })
+        }
+      },
+
+      setCurrentConversation: (id) => {
+        set({ currentConversationId: id })
+      },
+
+      askQuestion: async (query, conversationId) => {
+        set({ isLoading: true, error: null })
+        try {
+          const targetConversationId = conversationId || get().currentConversationId
+
+          if (!targetConversationId) {
+            throw new Error("No conversation selected")
+          }
+
+          const userMessage: Message = {
+            id: `msg_${Date.now()}`,
+            role: "user",
+            content: query,
+            timestamp: new Date(),
+            conversationId: targetConversationId,
+          }
+
+          // Simulate API delay
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+
+          const assistantMessage: Message = {
+            id: `msg_${Date.now() + 1}`,
+            role: "assistant",
+            content: generateMockResponse(query),
+            timestamp: new Date(),
+            conversationId: targetConversationId,
+          }
+
+          set((state) => ({
+            conversations: state.conversations.map((conv) =>
+              conv.id === targetConversationId
+                ? {
+                    ...conv,
+                    messages: [...conv.messages, userMessage, assistantMessage],
+                    updatedAt: new Date(),
+                  }
+                : conv,
+            ),
+            isLoading: false,
+          }))
+
+          return assistantMessage
+        } catch (error) {
+          set({ error: "Failed to send message", isLoading: false })
+          throw error
+        }
+      },
+
+      clearError: () => {
+        set({ error: null })
+      },
+    }),
+    {
+      name: "ai-assistant-storage",
+      partialize: (state) => ({
+        conversations: state.conversations,
+        currentConversationId: state.currentConversationId,
+      }),
+    },
+  ),
 )
