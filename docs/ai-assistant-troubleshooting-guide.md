@@ -28,7 +28,7 @@ Before diving into specific issues, run through this quick checklist:
 
 **AI Service Connectivity Issues**
 
-```bash
+\`\`\`bash
 # Check AI service health
 GET /ai-assistant/monitoring/dashboard/metrics
 
@@ -44,24 +44,24 @@ GET /ai-assistant/monitoring/dashboard/metrics
     "activeUsers": 23
   }
 }
-```
+\`\`\`
 
 **Solution**: If unhealthy, check Hugging Face API status and connectivity.
 
 **Rate Limiting**
 
-```bash
+\`\`\`bash
 # Check rate limit status
 GET /ai-assistant/monitoring/dashboard/metrics
 
 # Look for high error rates or rate limit indicators
-```
+\`\`\`
 
 **Solution**: Wait for rate limit reset or implement request queuing.
 
 **Conversation Issues**
 
-```bash
+\`\`\`bash
 # Verify conversation exists and is accessible
 GET /ai-assistant/conversations/{conversationId}
 
@@ -70,7 +70,7 @@ GET /ai-assistant/conversations/{conversationId}
   "status": "active", // Should not be "archived" or "escalated"
   "studentId": "user-uuid" // Should match current user
 }
-```
+\`\`\`
 
 **Solution**: Create new conversation or check conversation permissions.
 
@@ -86,7 +86,7 @@ GET /ai-assistant/conversations/{conversationId}
 
 **Check Question Quality**
 
-```typescript
+\`\`\`typescript
 // Analyze question characteristics
 const questionAnalysis = {
   length: question.length, // Should be 10-500 characters
@@ -94,11 +94,11 @@ const questionAnalysis = {
   academicTerms: countAcademicTerms(question), // Should be > 0
   context: hasProjectContext(question), // Improves response quality
 };
-```
+\`\`\`
 
 **Review Response Metadata**
 
-```bash
+\`\`\`bash
 # Check response details
 POST /ai-assistant/ask
 {
@@ -117,7 +117,7 @@ POST /ai-assistant/ask
     "requiresHumanReview": false
   }
 }
-```
+\`\`\`
 
 #### Solutions
 
@@ -130,7 +130,7 @@ POST /ai-assistant/ask
 
 **Enhance Conversation Context**
 
-```bash
+\`\`\`bash
 # Link conversation to project for better context
 POST /ai-assistant/conversations
 {
@@ -138,16 +138,16 @@ POST /ai-assistant/conversations
   "projectId": "project-uuid", // Important for context
   "language": "en"
 }
-```
+\`\`\`
 
 **Check Knowledge Base Coverage**
 
-```bash
+\`\`\`bash
 # Search knowledge base for topic coverage
 GET /ai-assistant/knowledge/search?query=literature review&category=methodology
 
 # If no results, the topic may not be covered
-```
+\`\`\`
 
 ### 3. Conversation Management Issues
 
@@ -161,43 +161,43 @@ GET /ai-assistant/knowledge/search?query=literature review&category=methodology
 
 **Check Conversation Limits**
 
-```bash
+\`\`\`bash
 # Verify user hasn't exceeded conversation limits
 GET /ai-assistant/conversations
 
 # Check total count against limits:
 // CONVERSATION_LIMITS.MAX_CONVERSATIONS_PER_USER = 50
-```
+\`\`\`
 
 **Verify Conversation Access**
 
-```bash
+\`\`\`bash
 # Ensure user has access to conversation
 GET /ai-assistant/conversations/{conversationId}
 
 # Should return conversation data, not 403 Forbidden
-```
+\`\`\`
 
 **Check Message History**
 
-```bash
+\`\`\`bash
 # Verify messages are being stored
 GET /ai-assistant/conversations/{conversationId}/messages
 
 # Should return message array with proper timestamps
-```
+\`\`\`
 
 #### Solutions
 
 **Conversation Limit Exceeded**
 
-```bash
+\`\`\`bash
 # Archive old conversations
 PUT /ai-assistant/conversations/{oldConversationId}
 {
   "status": "archived"
 }
-```
+\`\`\`
 
 **Permission Issues**
 
@@ -223,7 +223,7 @@ PUT /ai-assistant/conversations/{oldConversationId}
 
 **Test Bookmark Functionality**
 
-```bash
+\`\`\`bash
 # Try bookmarking a message
 POST /ai-assistant/messages/{messageId}/bookmark
 {
@@ -231,27 +231,27 @@ POST /ai-assistant/messages/{messageId}/bookmark
 }
 
 # Should return success response
-```
+\`\`\`
 
 **Check Saved Messages**
 
-```bash
+\`\`\`bash
 # Verify bookmarks are saved
 GET /ai-assistant/messages/bookmarked
 
 # Should return array of bookmarked messages
-```
+\`\`\`
 
 **Test Rating System**
 
-```bash
+\`\`\`bash
 # Submit a rating
 POST /ai-assistant/messages/{messageId}/rate
 {
   "rating": 5,
   "feedback": "Very helpful response"
 }
-```
+\`\`\`
 
 #### Solutions
 
@@ -285,30 +285,30 @@ POST /ai-assistant/messages/{messageId}/rate
 
 **Test Knowledge Base Search**
 
-```bash
+\`\`\`bash
 # Test basic search functionality
 GET /ai-assistant/knowledge/search?query=methodology&limit=10
 
 # Should return relevant knowledge entries
-```
+\`\`\`
 
 **Check Search Parameters**
 
-```bash
+\`\`\`bash
 # Test with different parameters
 GET /ai-assistant/knowledge/search?query=literature review&category=methodology&language=en
 
 # Verify category and language filters work
-```
+\`\`\`
 
 **Verify Content Availability**
 
-```bash
+\`\`\`bash
 # Check if knowledge base has content
 GET /admin/knowledge?limit=5
 
 # Should return knowledge entries (admin access required)
-```
+\`\`\`
 
 #### Solutions
 
@@ -345,49 +345,49 @@ GET /admin/knowledge?limit=5
 
 **Check Hugging Face API Health**
 
-```bash
+\`\`\`bash
 # Test direct API connectivity
 curl -X POST \
   "https://api-inference.huggingface.co/models/distilbert-base-cased-distilled-squad" \
   -H "Authorization: Bearer $HUGGING_FACE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"inputs": {"question": "What is AI?", "context": "Artificial Intelligence is..."}}'
-```
+\`\`\`
 
 **Monitor Circuit Breaker Status**
 
-```bash
+\`\`\`bash
 # Check circuit breaker state
 GET /ai-assistant/monitoring/dashboard/metrics
 
 # Look for circuit breaker information in response
-```
+\`\`\`
 
 **Review API Usage**
 
-```bash
+\`\`\`bash
 # Check API usage patterns
 GET /ai-assistant/monitoring/performance/report?startDate=2024-01-01&endDate=2024-01-31
 
 # Monitor for rate limiting or quota issues
-```
+\`\`\`
 
 #### Solutions
 
 **API Key Issues**
 
-```bash
+\`\`\`bash
 # Verify API key is set and valid
 echo $HUGGING_FACE_API_KEY
 
 # Test key with simple request
 curl -H "Authorization: Bearer $HUGGING_FACE_API_KEY" \
   "https://api-inference.huggingface.co/models/distilbert-base-cased-distilled-squad"
-```
+\`\`\`
 
 **Rate Limiting**
 
-```typescript
+\`\`\`typescript
 // Implement proper rate limiting
 class HuggingFaceRateLimiter {
   private requests: number[] = [];
@@ -411,17 +411,17 @@ class HuggingFaceRateLimiter {
     }
   }
 }
-```
+\`\`\`
 
 **Circuit Breaker Reset**
 
-```bash
+\`\`\`bash
 # Manual circuit breaker reset (if endpoint exists)
 POST /ai-assistant/admin/circuit-breaker/reset
 
 # Or restart the service
 pm2 restart ai-assistant-service
-```
+\`\`\`
 
 ### 2. Database Performance Issues
 
@@ -435,7 +435,7 @@ pm2 restart ai-assistant-service
 
 **Check Query Performance**
 
-```sql
+\`\`\`sql
 -- PostgreSQL: Check slow queries related to AI Assistant
 SELECT query, mean_time, calls, total_time
 FROM pg_stat_statements
@@ -447,22 +447,22 @@ ORDER BY mean_time DESC;
 SELECT schemaname, tablename, attname, n_distinct, correlation
 FROM pg_stats
 WHERE tablename IN ('conversations', 'conversation_messages', 'knowledge_base_entries');
-```
+\`\`\`
 
 **Monitor Connection Pool**
 
-```bash
+\`\`\`bash
 # Check database connections
 GET /health
 
 # Look for database-related metrics
-```
+\`\`\`
 
 #### Solutions
 
 **Add Missing Indexes**
 
-```sql
+\`\`\`sql
 -- Optimize conversation queries
 CREATE INDEX CONCURRENTLY idx_conversations_student_updated
 ON conversations(student_id, updated_at DESC);
@@ -477,11 +477,11 @@ ON knowledge_base_entries(is_active, category) WHERE is_active = true;
 -- Full-text search optimization
 CREATE INDEX CONCURRENTLY idx_knowledge_search_vector
 ON knowledge_base_entries USING GIN(search_vector);
-```
+\`\`\`
 
 **Query Optimization**
 
-```typescript
+\`\`\`typescript
 // Implement pagination for large result sets
 class ConversationService {
   async getConversationMessages(
@@ -504,7 +504,7 @@ class ConversationService {
     };
   }
 }
-```
+\`\`\`
 
 ### 3. Caching and Performance Issues
 
@@ -518,29 +518,29 @@ class ConversationService {
 
 **Check Cache Performance**
 
-```bash
+\`\`\`bash
 # Monitor Redis cache
 redis-cli info memory
 redis-cli info stats
 
 # Check cache hit rates
 redis-cli info stats | grep keyspace_hits
-```
+\`\`\`
 
 **Memory Analysis**
 
-```bash
+\`\`\`bash
 # Check Node.js memory usage
 GET /ai-assistant/monitoring/dashboard/metrics
 
 # Look for memory-related metrics
-```
+\`\`\`
 
 #### Solutions
 
 **Implement Response Caching**
 
-```typescript
+\`\`\`typescript
 class ResponseCacheService {
   private readonly redis: Redis;
   private readonly CACHE_TTL = 3600; // 1 hour
@@ -570,11 +570,11 @@ class ResponseCacheService {
       .digest('hex');
   }
 }
-```
+\`\`\`
 
 **Context Caching**
 
-```typescript
+\`\`\`typescript
 class ContextCacheService {
   private readonly CONTEXT_CACHE_TTL = 1800; // 30 minutes
 
@@ -598,7 +598,7 @@ class ContextCacheService {
     );
   }
 }
-```
+\`\`\`
 
 ### 4. Knowledge Base Management Issues
 
@@ -612,7 +612,7 @@ class ContextCacheService {
 
 **Test Knowledge Base CRUD Operations**
 
-```bash
+\`\`\`bash
 # Test creating knowledge entry (admin required)
 POST /ai-assistant/admin/knowledge
 {
@@ -623,32 +623,32 @@ POST /ai-assistant/admin/knowledge
   "keywords": ["test", "troubleshooting"],
   "contentType": "guideline"
 }
-```
+\`\`\`
 
 **Check Search Vector Updates**
 
-```sql
+\`\`\`sql
 -- Verify search vectors are being updated
 SELECT id, title, search_vector IS NOT NULL as has_search_vector
 FROM knowledge_base_entries
 WHERE created_at > NOW() - INTERVAL '1 day';
-```
+\`\`\`
 
 **Test Full-Text Search**
 
-```sql
+\`\`\`sql
 -- Test PostgreSQL full-text search directly
 SELECT id, title, ts_rank(search_vector, plainto_tsquery('english', 'methodology')) as rank
 FROM knowledge_base_entries
 WHERE search_vector @@ plainto_tsquery('english', 'methodology')
 ORDER BY rank DESC;
-```
+\`\`\`
 
 #### Solutions
 
 **Search Vector Issues**
 
-```sql
+\`\`\`sql
 -- Manually update search vectors
 UPDATE knowledge_base_entries
 SET search_vector =
@@ -668,11 +668,11 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-```
+\`\`\`
 
 **Content Synchronization**
 
-```typescript
+\`\`\`typescript
 // Implement knowledge base refresh
 class KnowledgeBaseService {
   @Cron('0 */6 * * *') // Every 6 hours
@@ -694,7 +694,7 @@ class KnowledgeBaseService {
     }
   }
 }
-```
+\`\`\`
 
 ## Error Code Reference
 
@@ -747,7 +747,7 @@ class KnowledgeBaseService {
 
 ### Alert Thresholds
 
-```yaml
+\`\`\`yaml
 alerts:
   critical:
     - error_rate > 10%
@@ -765,7 +765,7 @@ alerts:
     - new_conversation_created
     - knowledge_base_updated
     - cache_cleared
-```
+\`\`\`
 
 ## Recovery Procedures
 
@@ -773,52 +773,52 @@ alerts:
 
 1. **Identify the Issue**
 
-   ```bash
+   \`\`\`bash
    # Check overall system health
    GET /ai-assistant/monitoring/dashboard/metrics
 
    # Check specific service health
    GET /health
-   ```
+   \`\`\`
 
 2. **Immediate Actions**
 
-   ```bash
+   \`\`\`bash
    # Clear problematic cache entries
    redis-cli flushdb
 
    # Reset circuit breakers
    POST /ai-assistant/admin/circuit-breaker/reset
-   ```
+   \`\`\`
 
 3. **Service Restart**
 
-   ```bash
+   \`\`\`bash
    # Graceful restart
    pm2 restart ai-assistant
 
    # Or with Docker
    docker-compose restart backend
-   ```
+   \`\`\`
 
 ### Data Recovery
 
 1. **Conversation Recovery**
 
-   ```sql
+   \`\`\`sql
    -- Restore conversations from backup
    pg_restore -t conversations -t conversation_messages backup.sql
-   ```
+   \`\`\`
 
 2. **Knowledge Base Recovery**
 
-   ```sql
+   \`\`\`sql
    -- Restore knowledge base
    pg_restore -t knowledge_base_entries backup.sql
 
    -- Rebuild search vectors
    UPDATE knowledge_base_entries SET updated_at = NOW();
-   ```
+   \`\`\`
 
 ## Prevention Strategies
 

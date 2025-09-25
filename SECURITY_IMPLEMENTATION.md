@@ -169,23 +169,23 @@ This document summarizes the comprehensive security measures implemented for the
 
 ### Rate Limit Configurations
 
-```typescript
+\`\`\`typescript
 search: { windowMs: 60000, maxRequests: 30 }
 bookmark: { windowMs: 60000, maxRequests: 20 }
 project_creation: { windowMs: 3600000, maxRequests: 5 }
 analytics: { windowMs: 60000, maxRequests: 10 }
-```
+\`\`\`
 
 ### Input Validation Limits
 
-```typescript
+\`\`\`typescript
 SEARCH_QUERY: 500 characters
 PROJECT_TITLE: 200 characters
 PROJECT_ABSTRACT: 2000 characters
 TAG: 50 characters
 URL: 500 characters
 NOTES: 1000 characters
-```
+\`\`\`
 
 ## 9. Performance Considerations
 

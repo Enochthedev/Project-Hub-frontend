@@ -6,17 +6,17 @@ The AI Assistant API provides intelligent Q&A support for Final Year Project stu
 
 ## Base URL
 
-```
+\`\`\`
 https://api.fyp-platform.com/ai-assistant
-```
+\`\`\`
 
 ## Authentication
 
 All API endpoints require JWT authentication. Include the JWT token in the Authorization header:
 
-```
+\`\`\`
 Authorization: Bearer <your-jwt-token>
-```
+\`\`\`
 
 ## Rate Limiting
 
@@ -34,7 +34,7 @@ Rate limit headers are included in all responses:
 
 The API uses standard HTTP status codes and returns detailed error information:
 
-```json
+\`\`\`json
 {
   "statusCode": 400,
   "message": "Validation failed",
@@ -46,7 +46,7 @@ The API uses standard HTTP status codes and returns detailed error information:
   "timestamp": "2024-01-15T10:30:00.000Z",
   "path": "/ai-assistant/ask"
 }
-```
+\`\`\`
 
 ### Common Error Codes
 
@@ -66,24 +66,24 @@ The API uses standard HTTP status codes and returns detailed error information:
 
 Creates a new AI assistant conversation.
 
-```http
+\`\`\`http
 POST /conversations
-```
+\`\`\`
 
 **Request Body:**
 
-```json
+\`\`\`json
 {
   "title": "Literature Review Questions",
   "projectId": "uuid-string",
   "language": "en",
   "initialQuery": "How do I start my literature review?"
 }
-```
+\`\`\`
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "id": "conv-uuid",
   "studentId": "user-uuid",
@@ -105,15 +105,15 @@ POST /conversations
   "createdAt": "2024-01-15T10:30:00.000Z",
   "updatedAt": "2024-01-15T10:30:00.000Z"
 }
-```
+\`\`\`
 
 #### Get Conversations
 
 Retrieves user's conversations with optional filtering.
 
-```http
+\`\`\`http
 GET /conversations?status=active&limit=20&offset=0
-```
+\`\`\`
 
 **Query Parameters:**
 
@@ -126,7 +126,7 @@ GET /conversations?status=active&limit=20&offset=0
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "conversations": [
     {
@@ -141,19 +141,19 @@ GET /conversations?status=active&limit=20&offset=0
   "total": 1,
   "hasMore": false
 }
-```
+\`\`\`
 
 #### Get Conversation Messages
 
 Retrieves message history for a specific conversation.
 
-```http
+\`\`\`http
 GET /conversations/{conversationId}/messages?limit=50&offset=0
-```
+\`\`\`
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "messages": [
     {
@@ -179,7 +179,7 @@ GET /conversations/{conversationId}/messages?limit=50&offset=0
   "total": 2,
   "hasMore": false
 }
-```
+\`\`\`
 
 ### 2. Q&A Interaction
 
@@ -187,24 +187,24 @@ GET /conversations/{conversationId}/messages?limit=50&offset=0
 
 Submits a question to the AI assistant and receives an intelligent response.
 
-```http
+\`\`\`http
 POST /ask
-```
+\`\`\`
 
 **Request Body:**
 
-```json
+\`\`\`json
 {
   "query": "What is the difference between qualitative and quantitative research?",
   "conversationId": "conv-uuid",
   "language": "en",
   "includeProjectContext": true
 }
-```
+\`\`\`
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "response": "Qualitative and quantitative research differ in several key ways...",
   "confidenceScore": 0.88,
@@ -225,11 +225,11 @@ POST /ask
     "requiresHumanReview": false
   }
 }
-```
+\`\`\`
 
 **Low Confidence Response Example:**
 
-```json
+\`\`\`json
 {
   "response": "I'm not entirely certain about this specific question. Based on available information, it seems that...",
   "confidenceScore": 0.35,
@@ -242,7 +242,7 @@ POST /ask
     "Should I help you contact your supervisor?"
   ]
 }
-```
+\`\`\`
 
 ### 3. Message Management
 
@@ -250,49 +250,49 @@ POST /ask
 
 Saves an important AI response for future reference.
 
-```http
+\`\`\`http
 POST /messages/{messageId}/bookmark
-```
+\`\`\`
 
 **Request Body:**
 
-```json
+\`\`\`json
 {
   "note": "Great explanation of research methodology differences"
 }
-```
+\`\`\`
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "id": "msg-uuid",
   "isBookmarked": true,
   "bookmarkNote": "Great explanation of research methodology differences",
   "bookmarkedAt": "2024-01-15T10:30:00.000Z"
 }
-```
+\`\`\`
 
 #### Rate Message
 
 Provides quality feedback on an AI response.
 
-```http
+\`\`\`http
 POST /messages/{messageId}/rate
-```
+\`\`\`
 
 **Request Body:**
 
-```json
+\`\`\`json
 {
   "rating": 5,
   "feedback": "Very helpful and comprehensive explanation"
 }
-```
+\`\`\`
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "id": "msg-uuid",
   "averageRating": 4.7,
@@ -300,19 +300,19 @@ POST /messages/{messageId}/rate
   "userRating": 5,
   "ratedAt": "2024-01-15T10:30:00.000Z"
 }
-```
+\`\`\`
 
 #### Get Bookmarked Messages
 
 Retrieves all bookmarked messages for the user.
 
-```http
+\`\`\`http
 GET /messages/bookmarked?limit=50&offset=0
-```
+\`\`\`
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "messages": [
     {
@@ -328,7 +328,7 @@ GET /messages/bookmarked?limit=50&offset=0
   "total": 1,
   "hasMore": false
 }
-```
+\`\`\`
 
 ### 4. Knowledge Base Search
 
@@ -336,9 +336,9 @@ GET /messages/bookmarked?limit=50&offset=0
 
 Searches the knowledge base for relevant content.
 
-```http
+\`\`\`http
 GET /knowledge/search?query=literature review&category=methodology&limit=10
-```
+\`\`\`
 
 **Query Parameters:**
 
@@ -349,7 +349,7 @@ GET /knowledge/search?query=literature review&category=methodology&limit=10
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "results": [
     {
@@ -367,7 +367,7 @@ GET /knowledge/search?query=literature review&category=methodology&limit=10
   "query": "literature review",
   "processingTime": 45
 }
-```
+\`\`\`
 
 ## Supervisor Endpoints
 
@@ -375,9 +375,9 @@ GET /knowledge/search?query=literature review&category=methodology&limit=10
 
 Provides overview of AI assistant interactions for supervised students.
 
-```http
+\`\`\`http
 GET /supervisor/student-interactions?studentId=user-uuid&startDate=2024-01-01&endDate=2024-01-31
-```
+\`\`\`
 
 **Query Parameters:**
 
@@ -391,7 +391,7 @@ GET /supervisor/student-interactions?studentId=user-uuid&startDate=2024-01-01&en
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "summary": {
     "totalStudents": 25,
@@ -421,19 +421,19 @@ GET /supervisor/student-interactions?studentId=user-uuid&startDate=2024-01-01&en
     }
   ]
 }
-```
+\`\`\`
 
 ### Common Questions Analysis
 
 Analyzes common questions to identify support needs and knowledge gaps.
 
-```http
+\`\`\`http
 GET /supervisor/common-questions?minConfidence=0.5&lowRatedOnly=true
-```
+\`\`\`
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "analysis": {
     "totalQuestions": 1250,
@@ -466,7 +466,7 @@ GET /supervisor/common-questions?minConfidence=0.5&lowRatedOnly=true
     }
   ]
 }
-```
+\`\`\`
 
 ## Admin Endpoints
 
@@ -476,13 +476,13 @@ GET /supervisor/common-questions?minConfidence=0.5&lowRatedOnly=true
 
 Creates a new knowledge base entry.
 
-```http
+\`\`\`http
 POST /admin/knowledge
-```
+\`\`\`
 
 **Request Body:**
 
-```json
+\`\`\`json
 {
   "title": "Writing an Effective Literature Review",
   "content": "A literature review is a comprehensive analysis...",
@@ -492,11 +492,11 @@ POST /admin/knowledge
   "contentType": "guideline",
   "language": "en"
 }
-```
+\`\`\`
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "id": "kb-uuid",
   "title": "Writing an Effective Literature Review",
@@ -509,25 +509,25 @@ POST /admin/knowledge
   "createdBy": "admin-uuid",
   "createdAt": "2024-01-15T10:30:00.000Z"
 }
-```
+\`\`\`
 
 #### Update Knowledge Entry
 
 Updates an existing knowledge base entry.
 
-```http
+\`\`\`http
 PUT /admin/knowledge/{entryId}
-```
+\`\`\`
 
 **Request Body:**
 
-```json
+\`\`\`json
 {
   "title": "Updated: Writing an Effective Literature Review",
   "content": "Updated content with new guidelines...",
   "tags": ["literature-review", "academic-writing", "research", "updated"]
 }
-```
+\`\`\`
 
 ### Response Template Management
 
@@ -535,13 +535,13 @@ PUT /admin/knowledge/{entryId}
 
 Creates a fallback response template.
 
-```http
+\`\`\`http
 POST /admin/templates
-```
+\`\`\`
 
 **Request Body:**
 
-```json
+\`\`\`json
 {
   "name": "Methodology Guidance Template",
   "template": "For questions about {{topic}}, I recommend consulting your supervisor or referring to the methodology guidelines in our knowledge base.",
@@ -552,19 +552,19 @@ POST /admin/templates
   },
   "language": "en"
 }
-```
+\`\`\`
 
 ### Content Analytics
 
 Retrieves comprehensive analytics about knowledge base and template usage.
 
-```http
+\`\`\`http
 GET /admin/analytics
-```
+\`\`\`
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "knowledgeBase": {
     "totalEntries": 156,
@@ -602,7 +602,7 @@ GET /admin/analytics
     }
   ]
 }
-```
+\`\`\`
 
 ## Monitoring Endpoints
 
@@ -610,13 +610,13 @@ GET /admin/analytics
 
 Retrieves comprehensive dashboard metrics for monitoring.
 
-```http
+\`\`\`http
 GET /monitoring/dashboard/metrics
-```
+\`\`\`
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "overview": {
     "totalUsers": 1250,
@@ -646,19 +646,19 @@ GET /monitoring/dashboard/metrics
     "recent": []
   }
 }
-```
+\`\`\`
 
 ### Performance Report
 
 Generates comprehensive performance report.
 
-```http
+\`\`\`http
 GET /monitoring/performance/report?startDate=2024-01-01&endDate=2024-01-31
-```
+\`\`\`
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "period": {
     "start": "2024-01-01T00:00:00.000Z",
@@ -688,7 +688,7 @@ GET /monitoring/performance/report?startDate=2024-01-01&endDate=2024-01-31
     }
   ]
 }
-```
+\`\`\`
 
 ## WebSocket Events
 
@@ -696,19 +696,19 @@ The AI Assistant supports real-time updates via WebSocket connections.
 
 ### Connection
 
-```javascript
+\`\`\`javascript
 const socket = io('/ai-assistant', {
   auth: {
     token: 'your-jwt-token',
   },
 });
-```
+\`\`\`
 
 ### Events
 
 #### Conversation Updates
 
-```javascript
+\`\`\`javascript
 socket.on('conversation:updated', (data) => {
   console.log('Conversation updated:', data);
   // {
@@ -717,11 +717,11 @@ socket.on('conversation:updated', (data) => {
   //   message: { ... }
   // }
 });
-```
+\`\`\`
 
 #### Response Processing
 
-```javascript
+\`\`\`javascript
 socket.on('response:processing', (data) => {
   console.log('AI processing response:', data);
   // {
@@ -739,11 +739,11 @@ socket.on('response:complete', (data) => {
   //   response: { ... }
   // }
 });
-```
+\`\`\`
 
 #### System Alerts
 
-```javascript
+\`\`\`javascript
 socket.on('system:alert', (data) => {
   console.log('System alert:', data);
   // {
@@ -753,17 +753,17 @@ socket.on('system:alert', (data) => {
   //   estimatedDuration: 300000
   // }
 });
-```
+\`\`\`
 
 ## SDKs and Libraries
 
 ### JavaScript/TypeScript SDK
 
-```bash
+\`\`\`bash
 npm install @fyp-platform/ai-assistant-sdk
-```
+\`\`\`
 
-```javascript
+\`\`\`javascript
 import { AIAssistantClient } from '@fyp-platform/ai-assistant-sdk';
 
 const client = new AIAssistantClient({
@@ -782,15 +782,15 @@ const conversation = await client.createConversation({
   title: 'My Research Questions',
   projectId: 'project-uuid',
 });
-```
+\`\`\`
 
 ### Python SDK
 
-```bash
+\`\`\`bash
 pip install fyp-ai-assistant
-```
+\`\`\`
 
-```python
+\`\`\`python
 from fyp_ai_assistant import AIAssistantClient
 
 client = AIAssistantClient(
@@ -806,7 +806,7 @@ response = client.ask(
 
 # Get conversations
 conversations = client.get_conversations(limit=10)
-```
+\`\`\`
 
 ## Best Practices
 

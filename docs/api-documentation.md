@@ -6,23 +6,23 @@ The AI-Powered Recommendations API provides intelligent project recommendations 
 
 ## Base URL
 
-```
+\`\`\`
 Production: https://api.yourapp.com
 Staging: https://staging-api.yourapp.com
 Development: http://localhost:3000
-```
+\`\`\`
 
 ## Authentication
 
 All API endpoints require JWT authentication. Include the token in the Authorization header:
 
-```http
+\`\`\`http
 Authorization: Bearer <your_jwt_token>
-```
+\`\`\`
 
 ### Getting an Authentication Token
 
-```http
+\`\`\`http
 POST /auth/login
 Content-Type: application/json
 
@@ -30,11 +30,11 @@ Content-Type: application/json
   "email": "student@university.edu",
   "password": "your_password"
 }
-```
+\`\`\`
 
 **Response:**
 
-```json
+\`\`\`json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -45,7 +45,7 @@ Content-Type: application/json
     "role": "student"
   }
 }
-```
+\`\`\`
 
 ## Core Endpoints
 
@@ -53,9 +53,9 @@ Content-Type: application/json
 
 Get personalized project recommendations based on your profile.
 
-```http
+\`\`\`http
 GET /recommendations
-```
+\`\`\`
 
 #### Query Parameters
 
@@ -71,14 +71,14 @@ GET /recommendations
 
 #### Example Request
 
-```http
+\`\`\`http
 GET /recommendations?limit=5&includeSpecializations=AI,DataScience&maxDifficulty=advanced&minSimilarityScore=0.7
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+\`\`\`
 
 #### Response
 
-```json
+\`\`\`json
 {
   "recommendations": [
     {
@@ -121,7 +121,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
     "processingTimeMs": 2847
   }
 }
-```
+\`\`\`
 
 #### Status Codes
 
@@ -138,10 +138,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 Force regeneration of recommendations, bypassing cache.
 
-```http
+\`\`\`http
 POST /recommendations/refresh
 Authorization: Bearer <token>
-```
+\`\`\`
 
 #### Response
 
@@ -151,10 +151,10 @@ Same format as GET /recommendations, but always `fromCache: false`.
 
 Retrieve past recommendation sets for analysis and comparison.
 
-```http
+\`\`\`http
 GET /recommendations/history
 Authorization: Bearer <token>
-```
+\`\`\`
 
 #### Query Parameters
 
@@ -165,7 +165,7 @@ Authorization: Bearer <token>
 
 #### Response
 
-```json
+\`\`\`json
 {
   "history": [
     {
@@ -180,17 +180,17 @@ Authorization: Bearer <token>
   "total": 25,
   "hasMore": true
 }
-```
+\`\`\`
 
 ### 4. Submit Feedback
 
 Provide feedback on recommendations to improve future suggestions.
 
-```http
+\`\`\`http
 POST /recommendations/{recommendationId}/feedback
 Content-Type: application/json
 Authorization: Bearer <token>
-```
+\`\`\`
 
 #### Path Parameters
 
@@ -200,14 +200,14 @@ Authorization: Bearer <token>
 
 #### Request Body
 
-```json
+\`\`\`json
 {
   "projectId": "123e4567-e89b-12d3-a456-426614174000",
   "feedbackType": "like",
   "rating": 4.5,
   "comment": "Great match for my interests in AI and healthcare"
 }
-```
+\`\`\`
 
 #### Feedback Types
 
@@ -221,22 +221,22 @@ Authorization: Bearer <token>
 
 #### Response
 
-```json
+\`\`\`json
 {
   "success": true,
   "message": "Feedback submitted successfully",
   "feedbackId": "feedback-uuid"
 }
-```
+\`\`\`
 
 ### 5. Get Detailed Explanation
 
 Get comprehensive explanation for why a specific project was recommended.
 
-```http
+\`\`\`http
 GET /recommendations/{recommendationId}/explanation?projectId={projectId}
 Authorization: Bearer <token>
-```
+\`\`\`
 
 #### Query Parameters
 
@@ -246,7 +246,7 @@ Authorization: Bearer <token>
 
 #### Response
 
-```json
+\`\`\`json
 {
   "projectId": "123e4567-e89b-12d3-a456-426614174000",
   "similarityScore": 0.87,
@@ -279,20 +279,20 @@ Authorization: Bearer <token>
     "reasoning": "This project offers an excellent opportunity to apply your machine learning expertise in a high-impact domain..."
   }
 }
-```
+\`\`\`
 
 ### 6. Get Accessible Explanation
 
 Get user-friendly explanation with visual elements and plain language.
 
-```http
+\`\`\`http
 GET /recommendations/{recommendationId}/accessible-explanation?projectId={projectId}
 Authorization: Bearer <token>
-```
+\`\`\`
 
 #### Response
 
-```json
+\`\`\`json
 {
   "projectId": "123e4567-e89b-12d3-a456-426614174000",
   "accessibleExplanation": {
@@ -321,7 +321,7 @@ Authorization: Bearer <token>
     }
   }
 }
-```
+\`\`\`
 
 ## Advanced Features
 
@@ -329,44 +329,44 @@ Authorization: Bearer <token>
 
 Start recommendation generation with real-time progress updates.
 
-```http
+\`\`\`http
 POST /recommendations/generate-with-progress
 Content-Type: application/json
 Authorization: Bearer <token>
-```
+\`\`\`
 
 #### Request Body
 
-```json
+\`\`\`json
 {
   "limit": 10,
   "includeSpecializations": ["AI", "DataScience"],
   "minSimilarityScore": 0.6
 }
-```
+\`\`\`
 
 #### Response
 
-```json
+\`\`\`json
 {
   "requestId": "progress-uuid",
   "message": "Recommendation generation started",
   "estimatedTimeMs": 5000
 }
-```
+\`\`\`
 
 ### 8. Monitor Progress
 
 Get real-time updates on recommendation generation progress.
 
-```http
+\`\`\`http
 GET /recommendations/progress/{requestId}
 Authorization: Bearer <token>
-```
+\`\`\`
 
 #### Response
 
-```json
+\`\`\`json
 {
   "requestId": "progress-uuid",
   "progress": 65,
@@ -376,11 +376,11 @@ Authorization: Bearer <token>
   "result": null,
   "error": null
 }
-```
+\`\`\`
 
 When completed:
 
-```json
+\`\`\`json
 {
   "requestId": "progress-uuid",
   "progress": 100,
@@ -392,21 +392,21 @@ When completed:
   },
   "error": null
 }
-```
+\`\`\`
 
 ### 9. Batch Processing (Admin Only)
 
 Generate recommendations for multiple students (requires admin role).
 
-```http
+\`\`\`http
 POST /recommendations/batch
 Content-Type: application/json
 Authorization: Bearer <admin_token>
-```
+\`\`\`
 
 #### Request Body
 
-```json
+\`\`\`json
 {
   "studentIds": ["student-uuid-1", "student-uuid-2", "student-uuid-3"],
   "options": {
@@ -415,31 +415,31 @@ Authorization: Bearer <admin_token>
     "minSimilarityScore": 0.5
   }
 }
-```
+\`\`\`
 
 #### Response
 
-```json
+\`\`\`json
 {
   "batchId": "batch-uuid",
   "message": "Batch processing started",
   "studentCount": 3,
   "estimatedCompletionTime": "2024-01-15T14:45:00.000Z"
 }
-```
+\`\`\`
 
 ### 10. Get Batch Status
 
 Monitor batch processing progress (admin only).
 
-```http
+\`\`\`http
 GET /recommendations/batch/{batchId}
 Authorization: Bearer <admin_token>
-```
+\`\`\`
 
 #### Response
 
-```json
+\`\`\`json
 {
   "batchId": "batch-uuid",
   "status": "processing",
@@ -468,7 +468,7 @@ Authorization: Bearer <admin_token>
   "startedAt": "2024-01-15T14:30:00.000Z",
   "estimatedCompletion": "2024-01-15T14:45:00.000Z"
 }
-```
+\`\`\`
 
 ## Health and Monitoring Endpoints
 
@@ -476,13 +476,13 @@ Authorization: Bearer <admin_token>
 
 Check the health status of AI services (public endpoint).
 
-```http
+\`\`\`http
 GET /ai-health/status
-```
+\`\`\`
 
 #### Response
 
-```json
+\`\`\`json
 {
   "status": "healthy",
   "circuitBreakerState": "CLOSED",
@@ -493,20 +493,20 @@ GET /ai-health/status
   "issues": [],
   "recommendations": []
 }
-```
+\`\`\`
 
 ### 12. AI Service Metrics (Admin/Supervisor Only)
 
 Get detailed AI service metrics.
 
-```http
+\`\`\`http
 GET /ai-health/metrics
 Authorization: Bearer <admin_token>
-```
+\`\`\`
 
 #### Response
 
-```json
+\`\`\`json
 {
   "totalRequests": 1250,
   "successfulRequests": 1198,
@@ -519,7 +519,7 @@ Authorization: Bearer <admin_token>
   "requestsPerMinute": 12.5,
   "lastRequestTime": "2024-01-15T14:29:45.000Z"
 }
-```
+\`\`\`
 
 ## Error Handling
 
@@ -527,7 +527,7 @@ Authorization: Bearer <admin_token>
 
 All errors follow a consistent format:
 
-```json
+\`\`\`json
 {
   "statusCode": 400,
   "message": "Validation failed",
@@ -543,7 +543,7 @@ All errors follow a consistent format:
     }
   }
 }
-```
+\`\`\`
 
 ### Common Error Codes
 
@@ -568,22 +568,22 @@ The API implements rate limiting to ensure fair usage:
 
 Rate limit headers are included in responses:
 
-```http
+\`\`\`http
 X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 45
 X-RateLimit-Reset: 1642248600
 Retry-After: 60
-```
+\`\`\`
 
 ## SDK and Client Libraries
 
 ### JavaScript/TypeScript
 
-```bash
+\`\`\`bash
 npm install @yourapp/recommendations-sdk
-```
+\`\`\`
 
-```typescript
+\`\`\`typescript
 import { RecommendationsClient } from '@yourapp/recommendations-sdk';
 
 const client = new RecommendationsClient({
@@ -603,15 +603,15 @@ await client.submitFeedback('recommendation-id', {
   feedbackType: 'like',
   comment: 'Great match!',
 });
-```
+\`\`\`
 
 ### Python
 
-```bash
+\`\`\`bash
 pip install yourapp-recommendations-sdk
-```
+\`\`\`
 
-```python
+\`\`\`python
 from yourapp_recommendations import RecommendationsClient
 
 client = RecommendationsClient(
@@ -632,7 +632,7 @@ client.submit_feedback(
     feedback_type='like',
     comment='Great match!'
 )
-```
+\`\`\`
 
 ## Testing
 
@@ -640,7 +640,7 @@ client.submit_feedback(
 
 Import the Postman collection for easy API testing:
 
-```json
+\`\`\`json
 {
   "info": {
     "name": "AI Recommendations API",
@@ -667,11 +667,11 @@ Import the Postman collection for easy API testing:
     }
   ]
 }
-```
+\`\`\`
 
 ### cURL Examples
 
-```bash
+\`\`\`bash
 # Get recommendations
 curl -X GET "http://localhost:3000/recommendations?limit=5" \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -689,7 +689,7 @@ curl -X POST "http://localhost:3000/recommendations/rec-id/feedback" \
 
 # Check health
 curl -X GET "http://localhost:3000/ai-health/status"
-```
+\`\`\`
 
 ## Webhooks (Coming Soon)
 

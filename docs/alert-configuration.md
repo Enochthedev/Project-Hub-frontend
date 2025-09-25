@@ -10,7 +10,7 @@ This document provides detailed configuration instructions for setting up alerts
 
 Monitor the percentage of failed AI API requests.
 
-```typescript
+\`\`\`typescript
 {
   id: 'high_error_rate',
   name: 'High Error Rate',
@@ -31,7 +31,7 @@ Monitor the percentage of failed AI API requests.
     { type: 'slack', config: { webhookUrl: process.env.SLACK_WEBHOOK_URL } },
   ],
 }
-```
+\`\`\`
 
 **Triggers when**: Error rate > 10% over 15 minutes with at least 5 samples
 **Recommended action**: Check API connectivity, validate API keys, review error logs
@@ -40,7 +40,7 @@ Monitor the percentage of failed AI API requests.
 
 Monitor AI API response times for performance degradation.
 
-```typescript
+\`\`\`typescript
 {
   id: 'slow_response_time',
   name: 'Slow Response Time',
@@ -60,7 +60,7 @@ Monitor AI API response times for performance degradation.
     { type: 'email', config: { recipients: ['ops@example.com'] } },
   ],
 }
-```
+\`\`\`
 
 **Triggers when**: Average response time > 5 seconds over 10 minutes
 **Recommended action**: Check network latency, review API status, consider caching
@@ -69,7 +69,7 @@ Monitor AI API response times for performance degradation.
 
 Monitor rate limit hits to prevent service disruption.
 
-```typescript
+\`\`\`typescript
 {
   id: 'rate_limit_exceeded',
   name: 'Rate Limit Exceeded',
@@ -89,7 +89,7 @@ Monitor rate limit hits to prevent service disruption.
     { type: 'webhook', config: { url: process.env.WEBHOOK_ALERT_URL } },
   ],
 }
-```
+\`\`\`
 
 **Triggers when**: 5 or more rate limit hits in 1 hour
 **Recommended action**: Implement request queuing, upgrade API plan, optimize usage
@@ -98,7 +98,7 @@ Monitor rate limit hits to prevent service disruption.
 
 Monitor circuit breaker state changes for service reliability.
 
-```typescript
+\`\`\`typescript
 {
   id: 'circuit_breaker_open',
   name: 'Circuit Breaker Open',
@@ -119,7 +119,7 @@ Monitor circuit breaker state changes for service reliability.
     { type: 'pagerduty', config: { integrationKey: process.env.PAGERDUTY_KEY } },
   ],
 }
-```
+\`\`\`
 
 **Triggers when**: Circuit breaker opens (immediate)
 **Recommended action**: Check service health, review error patterns, manual intervention may be required
@@ -128,7 +128,7 @@ Monitor circuit breaker state changes for service reliability.
 
 Monitor monthly token consumption to prevent service interruption.
 
-```typescript
+\`\`\`typescript
 {
   id: 'high_token_usage',
   name: 'High Token Usage',
@@ -147,7 +147,7 @@ Monitor monthly token consumption to prevent service interruption.
     { type: 'email', config: { recipients: ['admin@example.com', 'billing@example.com'] } },
   ],
 }
-```
+\`\`\`
 
 **Triggers when**: Token usage > 90% of monthly limit
 **Recommended action**: Review usage patterns, consider plan upgrade, optimize token consumption
@@ -188,7 +188,7 @@ Monitor monthly token consumption to prevent service interruption.
 
 Writes alert information to application logs.
 
-```typescript
+\`\`\`typescript
 {
   type: 'log',
   config: {
@@ -197,13 +197,13 @@ Writes alert information to application logs.
     includeStackTrace: false,
   }
 }
-```
+\`\`\`
 
 ### 2. Email Action
 
 Sends email notifications to specified recipients.
 
-```typescript
+\`\`\`typescript
 {
   type: 'email',
   config: {
@@ -214,7 +214,7 @@ Sends email notifications to specified recipients.
     includeDiagnostics: true,
   }
 }
-```
+\`\`\`
 
 **Email Template Variables**:
 
@@ -230,7 +230,7 @@ Sends email notifications to specified recipients.
 
 Sends notifications to Slack channels via webhooks.
 
-```typescript
+\`\`\`typescript
 {
   type: 'slack',
   config: {
@@ -242,13 +242,13 @@ Sends notifications to Slack channels via webhooks.
     mentionUsers: ['@oncall'], // For critical alerts
   }
 }
-```
+\`\`\`
 
 ### 4. Webhook Action
 
 Sends HTTP POST requests to external monitoring systems.
 
-```typescript
+\`\`\`typescript
 {
   type: 'webhook',
   config: {
@@ -262,11 +262,11 @@ Sends HTTP POST requests to external monitoring systems.
     retries: 3,
   }
 }
-```
+\`\`\`
 
 **Webhook Payload**:
 
-```json
+\`\`\`json
 {
   "alert": {
     "id": "alert-id",
@@ -284,13 +284,13 @@ Sends HTTP POST requests to external monitoring systems.
     "health": {...}
   }
 }
-```
+\`\`\`
 
 ### 5. PagerDuty Action
 
 Integrates with PagerDuty for incident management.
 
-```typescript
+\`\`\`typescript
 {
   type: 'pagerduty',
   config: {
@@ -301,13 +301,13 @@ Integrates with PagerDuty for incident management.
     class: 'performance',
   }
 }
-```
+\`\`\`
 
 ## Environment-Specific Configuration
 
 ### Development Environment
 
-```typescript
+\`\`\`typescript
 const developmentAlerts = {
   errorRateThreshold: 20, // Higher threshold for dev
   responseTimeThreshold: 10000, // 10 seconds
@@ -318,11 +318,11 @@ const developmentAlerts = {
     { type: 'log', config: { level: 'warn' } }, // Log only
   ],
 };
-```
+\`\`\`
 
 ### Staging Environment
 
-```typescript
+\`\`\`typescript
 const stagingAlerts = {
   errorRateThreshold: 15,
   responseTimeThreshold: 7500,
@@ -334,11 +334,11 @@ const stagingAlerts = {
     { type: 'slack', config: { channel: '#staging-alerts' } },
   ],
 };
-```
+\`\`\`
 
 ### Production Environment
 
-```typescript
+\`\`\`typescript
 const productionAlerts = {
   errorRateThreshold: 10,
   responseTimeThreshold: 5000,
@@ -352,7 +352,7 @@ const productionAlerts = {
     { type: 'pagerduty', config: { integrationKey: 'prod-key' } },
   ],
 };
-```
+\`\`\`
 
 ## Dynamic Alert Configuration
 
@@ -360,7 +360,7 @@ const productionAlerts = {
 
 Alerts can be configured at runtime through the API:
 
-```typescript
+\`\`\`typescript
 // Add new alert rule
 POST /ai-health/alerts/rules
 {
@@ -391,11 +391,11 @@ PUT /ai-health/alerts/rules/{ruleId}
 
 // Delete rule
 DELETE /ai-health/alerts/rules/{ruleId}
-```
+\`\`\`
 
 ### Configuration from Environment
 
-```bash
+\`\`\`bash
 # Alert thresholds
 AI_ERROR_RATE_THRESHOLD=10
 AI_RESPONSE_TIME_THRESHOLD=5000
@@ -420,13 +420,13 @@ ALERT_EMAIL_RECIPIENTS=admin@example.com,ops@example.com
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
 PAGERDUTY_INTEGRATION_KEY=your-integration-key
 WEBHOOK_ALERT_URL=https://monitoring.example.com/webhook
-```
+\`\`\`
 
 ## Alert Testing
 
 ### Manual Testing
 
-```bash
+\`\`\`bash
 # Test alert rule evaluation
 POST /ai-health/alerts/rules/{ruleId}/test
 
@@ -442,11 +442,11 @@ POST /ai-health/alerts/actions/test
   },
   "testMessage": "This is a test alert"
 }
-```
+\`\`\`
 
 ### Automated Testing
 
-```typescript
+\`\`\`typescript
 describe('Alert System', () => {
   it('should trigger error rate alert', async () => {
     // Simulate high error rate
@@ -469,7 +469,7 @@ describe('Alert System', () => {
     expect(alerts[0].rule.id).toBe('high_error_rate');
   });
 });
-```
+\`\`\`
 
 ## Alert Maintenance
 
@@ -494,7 +494,7 @@ describe('Alert System', () => {
 
 #### Reducing False Positives
 
-```typescript
+\`\`\`typescript
 // Increase minimum samples
 condition: {
   type: 'error_rate',
@@ -512,11 +512,11 @@ condition: {
   operator: 'gt',
   timeWindow: 10,
 }
-```
+\`\`\`
 
 #### Handling Alert Storms
 
-```typescript
+\`\`\`typescript
 // Implement alert grouping
 {
   id: 'grouped_errors',
@@ -529,7 +529,7 @@ condition: {
     groupBy: ['severity', 'component'],
   },
 }
-```
+\`\`\`
 
 ### Alert Metrics
 
@@ -571,7 +571,7 @@ Track alert system performance:
 
 ### Debug Commands
 
-```bash
+\`\`\`bash
 # Check alert service status
 curl -X GET http://localhost:3000/ai-health/alerts/status
 
@@ -583,7 +583,7 @@ curl -X POST http://localhost:3000/ai-health/alerts/rules/{ruleId}/test
 
 # View alert history
 curl -X GET http://localhost:3000/ai-health/alerts/history?limit=50
-```
+\`\`\`
 
 ## Best Practices
 

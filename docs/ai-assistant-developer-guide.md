@@ -17,7 +17,7 @@
 
 ### System Components
 
-```mermaid
+\`\`\`mermaid
 graph TB
     Client[Frontend Client] --> Gateway[API Gateway]
     Gateway --> Controller[AI Assistant Controller]
@@ -40,7 +40,7 @@ graph TB
     AIService --> Cache[(Redis Cache)]
     MonitoringService --> Analytics[Analytics Service]
     Analytics --> Metrics[(Metrics Store)]
-```
+\`\`\`
 
 ### Core Services
 
@@ -88,7 +88,7 @@ graph TB
 
 #### Knowledge Base Entry Entity
 
-```typescript
+\`\`\`typescript
 @Entity('knowledge_base_entries')
 export class KnowledgeBaseEntry {
   @PrimaryGeneratedColumn('uuid')
@@ -134,7 +134,7 @@ export class KnowledgeBaseEntry {
   })
   searchVector: string;
 }
-```
+\`\`\`
 
 ### Content Categories
 
@@ -170,7 +170,7 @@ export class KnowledgeBaseEntry {
 
 #### Creating Knowledge Entries
 
-```typescript
+\`\`\`typescript
 // Service method
 async createKnowledgeEntry(
   createDto: CreateKnowledgeEntryDto
@@ -202,4 +202,4 @@ async createKnowledgeEntry(
   @Request() req: any,
   @Body() createDto: CreateKnowledgeEntryDto,
 ): Promise<Knowledge
-```
+\`\`\`

@@ -21,7 +21,7 @@ The benchmarking system provides:
 
 Before running benchmarks, ensure you have sufficient test data:
 
-```bash
+\`\`\`bash
 # Seed basic recommendation test data
 npm run seed:recommendations:scenarios
 
@@ -30,11 +30,11 @@ npm run seed:recommendations:performance
 
 # Seed comprehensive test data
 npm run seed:recommendations:all
-```
+\`\`\`
 
 ### 2. Run Benchmarks
 
-```bash
+\`\`\`bash
 # Run comprehensive benchmark (all metrics)
 npm run benchmark:recommendations
 
@@ -50,7 +50,7 @@ npm run benchmark:recommendations:ab
 
 # Run full benchmark suite
 npm run benchmark:recommendations:full
-```
+\`\`\`
 
 ### 3. View Results
 
@@ -70,9 +70,9 @@ Measures how well the recommendation system predicts user preferences:
 - **Mean Average Precision (MAP)**: Average precision across all users
 - **NDCG@K**: Normalized Discounted Cumulative Gain
 
-```bash
+\`\`\`bash
 npm run benchmark:recommendations:accuracy
-```
+\`\`\`
 
 #### Performance Benchmarking
 
@@ -84,17 +84,17 @@ Measures system performance and scalability:
 - **Error Rates**: Percentage of failed requests
 - **Resource Usage**: Memory, CPU, database performance
 
-```bash
+\`\`\`bash
 npm run benchmark:recommendations:performance
-```
+\`\`\`
 
 #### Load Testing
 
 Tests system behavior under various load conditions:
 
-```bash
+\`\`\`bash
 npm run benchmark:recommendations:load
-```
+\`\`\`
 
 This runs scenarios with:
 
@@ -106,9 +106,9 @@ This runs scenarios with:
 
 Compares different recommendation algorithms:
 
-```bash
+\`\`\`bash
 npm run benchmark:recommendations:ab
-```
+\`\`\`
 
 This compares:
 
@@ -119,7 +119,7 @@ This compares:
 
 You can customize benchmark runs with command-line options:
 
-```bash
+\`\`\`bash
 # Run only accuracy benchmarks
 npm run benchmark:recommendations -- --accuracy-only
 
@@ -137,13 +137,13 @@ npm run benchmark:recommendations -- --load-test
 
 # Run with A/B testing
 npm run benchmark:recommendations -- --ab-test
-```
+\`\`\`
 
 ### Performance Analysis
 
 The system includes advanced performance analysis capabilities:
 
-```typescript
+\`\`\`typescript
 import { PerformanceAnalyzerService } from './performance-analyzer.service';
 
 // Analyze performance over time period
@@ -162,7 +162,7 @@ await analyzerService.exportAnalysis(
   'markdown',
   './analysis-report.md',
 );
-```
+\`\`\`
 
 ## Benchmark Metrics Explained
 
@@ -245,7 +245,7 @@ The system automatically generates optimization recommendations based on benchma
 
 Set up automated benchmarking in your CI/CD pipeline:
 
-```yaml
+\`\`\`yaml
 # .github/workflows/benchmark.yml
 name: Recommendation Benchmark
 on:
@@ -273,13 +273,13 @@ jobs:
         with:
           name: benchmark-results
           path: benchmark-results/
-```
+\`\`\`
 
 ### Performance Monitoring
 
 Monitor key metrics in production:
 
-```typescript
+\`\`\`typescript
 // Monitor recommendation performance
 const metrics = await benchmarkService.measurePerformance();
 
@@ -291,7 +291,7 @@ if (metrics.averageResponseTime > 3000) {
 if (metrics.errorRate > 0.1) {
   await alertService.sendAlert('High error rate detected');
 }
-```
+\`\`\`
 
 ## Troubleshooting
 
@@ -306,18 +306,18 @@ if (metrics.errorRate > 0.1) {
 
 Enable debug logging for detailed benchmark execution:
 
-```bash
+\`\`\`bash
 DEBUG=benchmark:* npm run benchmark:recommendations
-```
+\`\`\`
 
 ### Performance Profiling
 
 Use Node.js profiling tools for detailed analysis:
 
-```bash
+\`\`\`bash
 node --prof src/test/performance/benchmark-runner.ts
 node --prof-process isolate-*.log > profile.txt
-```
+\`\`\`
 
 ## Contributing
 

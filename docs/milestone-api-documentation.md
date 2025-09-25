@@ -6,17 +6,17 @@ The Milestone Tracking API provides comprehensive functionality for managing pro
 
 ## Base URL
 
-```
+\`\`\`
 https://api.fyp-platform.com/v1
-```
+\`\`\`
 
 ## Authentication
 
 All API endpoints require authentication using JWT Bearer tokens:
 
-```http
+\`\`\`http
 Authorization: Bearer <your-jwt-token>
-```
+\`\`\`
 
 ## Rate Limiting
 
@@ -30,7 +30,7 @@ The API implements rate limiting to ensure fair usage:
 
 The API uses standard HTTP status codes and returns detailed error information:
 
-```json
+\`\`\`json
 {
   "statusCode": 400,
   "message": "Validation failed",
@@ -40,7 +40,7 @@ The API uses standard HTTP status codes and returns detailed error information:
     "constraint": "Due date must be in the future"
   }
 }
-```
+\`\`\`
 
 ## Milestone Management Endpoints
 
@@ -54,7 +54,7 @@ Creates a new milestone for the authenticated student.
 
 **Request Body:**
 
-```json
+\`\`\`json
 {
   "title": "Literature Review",
   "description": "Complete comprehensive literature review on machine learning applications",
@@ -63,11 +63,11 @@ Creates a new milestone for the authenticated student.
   "estimatedHours": 40,
   "projectId": "uuid-string" // optional
 }
-```
+\`\`\`
 
 **Response:** `201 Created`
 
-```json
+\`\`\`json
 {
   "id": "milestone-uuid",
   "title": "Literature Review",
@@ -88,7 +88,7 @@ Creates a new milestone for the authenticated student.
   "createdAt": "2024-01-15T10:00:00Z",
   "updatedAt": "2024-01-15T10:00:00Z"
 }
-```
+\`\`\`
 
 **Validation Rules:**
 
@@ -120,13 +120,13 @@ Retrieves milestones for the authenticated user with filtering and pagination.
 
 **Example Request:**
 
-```http
+\`\`\`http
 GET /milestones?status=in_progress&priority=high&page=1&limit=10
-```
+\`\`\`
 
 **Response:** `200 OK`
 
-```json
+\`\`\`json
 {
   "milestones": [
     {
@@ -148,7 +148,7 @@ GET /milestones?status=in_progress&priority=high&page=1&limit=10
   "limit": 10,
   "totalPages": 3
 }
-```
+\`\`\`
 
 ### Get Milestone by ID
 
@@ -160,7 +160,7 @@ Retrieves a specific milestone by its ID.
 
 **Response:** `200 OK`
 
-```json
+\`\`\`json
 {
   "id": "milestone-uuid",
   "title": "Literature Review",
@@ -195,7 +195,7 @@ Retrieves a specific milestone by its ID.
   "createdAt": "2024-01-15T10:00:00Z",
   "updatedAt": "2024-01-16T14:30:00Z"
 }
-```
+\`\`\`
 
 ### Update Milestone
 
@@ -207,7 +207,7 @@ Updates milestone details (students can only update their own milestones).
 
 **Request Body:**
 
-```json
+\`\`\`json
 {
   "title": "Updated Literature Review",
   "description": "Updated description with more details",
@@ -215,7 +215,7 @@ Updates milestone details (students can only update their own milestones).
   "estimatedHours": 50,
   "dueDate": "2024-07-01"
 }
-```
+\`\`\`
 
 **Response:** `200 OK` (same structure as Get Milestone)
 
@@ -229,14 +229,14 @@ Updates the status of a milestone with optional progress notes.
 
 **Request Body:**
 
-```json
+\`\`\`json
 {
   "status": "completed",
   "actualHours": 35,
   "notes": "Literature review completed successfully. Found 25 relevant papers.",
   "blockingReason": null // Required when status is 'blocked'
 }
-```
+\`\`\`
 
 **Status Transition Rules:**
 
@@ -274,7 +274,7 @@ Retrieves detailed progress information for a specific milestone.
 
 **Response:** `200 OK`
 
-```json
+\`\`\`json
 {
   "milestone": {
     "id": "milestone-uuid",
@@ -295,7 +295,7 @@ Retrieves detailed progress information for a specific milestone.
     }
   ]
 }
-```
+\`\`\`
 
 ### Get Project Progress Overview
 
@@ -307,7 +307,7 @@ Retrieves overall project progress based on milestone completion.
 
 **Response:** `200 OK`
 
-```json
+\`\`\`json
 {
   "overallProgress": 65.5,
   "totalMilestones": 8,
@@ -334,7 +334,7 @@ Retrieves overall project progress based on milestone completion.
     "dueDate": "2024-07-01"
   }
 }
-```
+\`\`\`
 
 ## Note Management Endpoints
 
@@ -348,12 +348,12 @@ Adds a progress note to a milestone.
 
 **Request Body:**
 
-```json
+\`\`\`json
 {
   "content": "Found 15 relevant papers on machine learning in education. Key themes emerging around personalized learning.",
   "type": "progress"
 }
-```
+\`\`\`
 
 **Note Types:**
 
@@ -365,7 +365,7 @@ Adds a progress note to a milestone.
 
 **Response:** `201 Created`
 
-```json
+\`\`\`json
 {
   "id": "note-uuid",
   "content": "Found 15 relevant papers on machine learning in education.",
@@ -376,7 +376,7 @@ Adds a progress note to a milestone.
   },
   "createdAt": "2024-01-16T14:30:00Z"
 }
-```
+\`\`\`
 
 ## Template Management Endpoints
 
@@ -390,7 +390,7 @@ Applies a predefined template to create multiple milestones.
 
 **Request Body:**
 
-```json
+\`\`\`json
 {
   "templateId": "template-uuid",
   "startDate": "2024-03-01",
@@ -403,11 +403,11 @@ Applies a predefined template to create multiple milestones.
     }
   ]
 }
-```
+\`\`\`
 
 **Response:** `201 Created`
 
-```json
+\`\`\`json
 {
   "milestones": [
     {
@@ -427,7 +427,7 @@ Applies a predefined template to create multiple milestones.
   "appliedAt": "2024-02-15T10:00:00Z",
   "totalMilestones": 2
 }
-```
+\`\`\`
 
 ### Preview Template Application
 
@@ -439,16 +439,16 @@ Previews what milestones would be created when applying a template.
 
 **Request Body:**
 
-```json
+\`\`\`json
 {
   "templateId": "template-uuid",
   "startDate": "2024-03-01"
 }
-```
+\`\`\`
 
 **Response:** `200 OK`
 
-```json
+\`\`\`json
 {
   "preview": [
     {
@@ -464,7 +464,7 @@ Previews what milestones would be created when applying a template.
     "Milestone 'Literature Review' conflicts with existing deadline on 2024-03-14"
   ]
 }
-```
+\`\`\`
 
 ## Supervisor Endpoints
 
@@ -488,7 +488,7 @@ Retrieves progress overview for all supervised students.
 
 **Response:** `200 OK`
 
-```json
+\`\`\`json
 {
   "students": [
     {
@@ -508,7 +508,7 @@ Retrieves progress overview for all supervised students.
     "averageProgress": 72.3
   }
 }
-```
+\`\`\`
 
 ## Error Codes
 
@@ -591,11 +591,11 @@ The API implements different rate limits for different operations:
 
 Rate limit headers are included in responses:
 
-```http
+\`\`\`http
 X-RateLimit-Limit: 10
 X-RateLimit-Remaining: 7
 X-RateLimit-Reset: 1640995200
-```
+\`\`\`
 
 ## Webhook Support
 
@@ -612,7 +612,7 @@ The API supports webhooks for real-time notifications:
 
 ### Webhook Payload Example
 
-```json
+\`\`\`json
 {
   "event": "milestone.status_changed",
   "timestamp": "2024-01-16T14:30:00Z",
@@ -629,7 +629,7 @@ The API supports webhooks for real-time notifications:
     }
   }
 }
-```
+\`\`\`
 
 ## SDK and Client Libraries
 
@@ -641,7 +641,7 @@ Official SDKs are available for:
 
 ### JavaScript SDK Example
 
-```javascript
+\`\`\`javascript
 import { MilestoneClient } from '@fyp-platform/milestone-sdk';
 
 const client = new MilestoneClient({
@@ -662,7 +662,7 @@ await client.milestones.updateStatus(milestone.id, {
   status: 'completed',
   actualHours: 35,
 });
-```
+\`\`\`
 
 ## Support and Resources
 

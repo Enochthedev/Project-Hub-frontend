@@ -18,7 +18,7 @@ The monitoring system consists of several components:
 
 ### Basic Health Checks
 
-```bash
+\`\`\`bash
 # General application health
 GET /health
 
@@ -30,11 +30,11 @@ GET /health/live
 
 # Application metrics
 GET /health/metrics
-```
+\`\`\`
 
 ### AI-Specific Health Endpoints
 
-```bash
+\`\`\`bash
 # AI service health status
 GET /ai-health/status
 
@@ -49,11 +49,11 @@ GET /ai-health/diagnostics
 
 # Circuit breaker status (requires admin/supervisor role)
 GET /ai-health/circuit-breakers
-```
+\`\`\`
 
 ### Administrative Endpoints
 
-```bash
+\`\`\`bash
 # Resolve an alert (requires admin role)
 POST /ai-health/alerts/{alertId}/resolve
 
@@ -65,7 +65,7 @@ POST /ai-health/health-check
 
 # Reset metrics (requires admin role)
 POST /ai-health/metrics/reset
-```
+\`\`\`
 
 ## Monitoring Configuration
 
@@ -73,7 +73,7 @@ POST /ai-health/metrics/reset
 
 Add these environment variables to your `.env` file:
 
-```bash
+\`\`\`bash
 # Logging Configuration
 LOG_LEVEL=info                    # debug, info, warn, error
 AI_LOG_RETENTION_DAYS=30         # Days to keep AI logs
@@ -100,7 +100,7 @@ AI_TOKEN_USAGE_WARNING=90         # Percentage of monthly limit (90%)
 CIRCUIT_BREAKER_FAILURE_THRESHOLD=5     # Failures before opening
 CIRCUIT_BREAKER_RECOVERY_TIMEOUT=60000  # Milliseconds (1 minute)
 CIRCUIT_BREAKER_MONITORING_PERIOD=300000 # Milliseconds (5 minutes)
-```
+\`\`\`
 
 ### Database Configuration
 
@@ -112,9 +112,9 @@ The monitoring system uses the following database tables:
 
 Ensure these tables are created by running migrations:
 
-```bash
+\`\`\`bash
 npm run migration:run
-```
+\`\`\`
 
 ## Alert Rules Configuration
 
@@ -132,7 +132,7 @@ The system comes with pre-configured alert rules:
 
 You can add custom alert rules programmatically:
 
-```typescript
+\`\`\`typescript
 import { AIAlertingService } from './services/ai-alerting.service';
 
 const customRule: AlertRule = {
@@ -156,7 +156,7 @@ const customRule: AlertRule = {
 };
 
 alertingService.addAlertRule(customRule);
-```
+\`\`\`
 
 ## Logging Configuration
 
@@ -172,7 +172,7 @@ Configure logging levels based on your environment:
 
 The system provides structured logging with the following fields:
 
-```json
+\`\`\`json
 {
   "timestamp": "2024-01-15T10:30:00.000Z",
   "level": "info",
@@ -186,7 +186,7 @@ The system provides structured logging with the following fields:
   "responseTimeMs": 1250,
   "success": true
 }
-```
+\`\`\`
 
 ### Log Aggregation
 
@@ -194,7 +194,7 @@ For production environments, consider using log aggregation tools:
 
 #### ELK Stack (Elasticsearch, Logstash, Kibana)
 
-```yaml
+\`\`\`yaml
 # docker-compose.yml
 version: '3.8'
 services:
@@ -219,11 +219,11 @@ services:
       - '5601:5601'
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-```
+\`\`\`
 
 #### Grafana + Loki
 
-```yaml
+\`\`\`yaml
 # docker-compose.yml
 version: '3.8'
 services:
@@ -239,7 +239,7 @@ services:
       - '3000:3000'
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
-```
+\`\`\`
 
 ## Performance Monitoring
 
@@ -256,7 +256,7 @@ The system automatically collects the following metrics:
 
 To integrate with Prometheus, add the following endpoint:
 
-```typescript
+\`\`\`typescript
 // Add to health controller
 @Get('metrics/prometheus')
 @Public()
@@ -283,13 +283,13 @@ ai_tokens_used_total ${metrics.totalTokensUsed}
 ai_rate_limit_hits_total ${metrics.rateLimitHits}
   `.trim();
 }
-```
+\`\`\`
 
 ### Grafana Dashboards
 
 Create Grafana dashboards to visualize AI service metrics:
 
-```json
+\`\`\`json
 {
   "dashboard": {
     "title": "AI Recommendations Monitoring",
@@ -326,7 +326,7 @@ Create Grafana dashboards to visualize AI service metrics:
     ]
   }
 }
-```
+\`\`\`
 
 ## Alerting Setup
 
@@ -334,7 +334,7 @@ Create Grafana dashboards to visualize AI service metrics:
 
 Configure email alerts using the existing email service:
 
-```typescript
+\`\`\`typescript
 // In ai-alerting.service.ts
 private async executeEmailAction(action: AlertAction, notification: AlertNotification): Promise<void> {
   const emailService = this.moduleRef.get(EmailService);
@@ -354,22 +354,22 @@ private async executeEmailAction(action: AlertAction, notification: AlertNotific
     },
   });
 }
-```
+\`\`\`
 
 ### Slack Integration
 
 Set up Slack webhooks for real-time alerts:
 
-```bash
+\`\`\`bash
 # Environment variable
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR_WORKSPACE_ID/YOUR_CHANNEL_ID/YOUR_WEBHOOK_TOKEN
-```
+\`\`\`
 
 ### PagerDuty Integration
 
 For critical alerts, integrate with PagerDuty:
 
-```typescript
+\`\`\`typescript
 private async executePagerDutyAction(action: AlertAction, notification: AlertNotification): Promise<void> {
   const pagerDutyClient = new PagerDutyClient(action.config.integrationKey);
 
@@ -387,7 +387,7 @@ private async executePagerDutyAction(action: AlertAction, notification: AlertNot
     },
   });
 }
-```
+\`\`\`
 
 ## Troubleshooting
 
@@ -419,7 +419,7 @@ private async executePagerDutyAction(action: AlertAction, notification: AlertNot
 
 ### Diagnostic Commands
 
-```bash
+\`\`\`bash
 # Check AI service health
 curl -X GET http://localhost:3000/ai-health/status
 
@@ -434,13 +434,13 @@ curl -X POST http://localhost:3000/ai-health/health-check \
 # Reset circuit breaker
 curl -X POST http://localhost:3000/ai-health/circuit-breaker/hugging-face-api/reset \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
-```
+\`\`\`
 
 ### Log Analysis
 
 Use these queries to analyze logs:
 
-```bash
+\`\`\`bash
 # Find all AI API errors in the last hour
 grep "AI API call failed" /var/log/app.log | grep "$(date -d '1 hour ago' '+%Y-%m-%d %H')"
 
@@ -449,7 +449,7 @@ grep "AI API call failed" /var/log/app.log | grep -o '"errorMessage":"[^"]*"' | 
 
 # Monitor response times
 grep "AI API call successful" /var/log/app.log | grep -o '"responseTimeMs":[0-9]*' | cut -d: -f2 | sort -n
-```
+\`\`\`
 
 ## Maintenance
 
@@ -474,13 +474,13 @@ grep "AI API call successful" /var/log/app.log | grep -o '"responseTimeMs":[0-9]
 
 Ensure monitoring data is backed up:
 
-```bash
+\`\`\`bash
 # Backup monitoring configuration
 pg_dump -t ai_api_usage -t recommendations -t recommendation_feedback > monitoring_backup.sql
 
 # Export metrics for analysis
 curl -X GET http://localhost:3000/ai-health/diagnostics > diagnostics_$(date +%Y%m%d).json
-```
+\`\`\`
 
 ## Security Considerations
 

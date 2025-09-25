@@ -8,7 +8,7 @@ This guide provides comprehensive documentation for developers working with the 
 
 ### System Components
 
-```mermaid
+\`\`\`mermaid
 graph TB
     Client[Client Application] --> API[Recommendation API]
     API --> Service[Recommendation Service]
@@ -26,7 +26,7 @@ graph TB
     Monitor[Monitoring Service] --> API
     Monitor --> AI
     Monitor --> Service
-```
+\`\`\`
 
 ### Key Services
 
@@ -44,21 +44,21 @@ graph TB
 
 All recommendation endpoints require JWT authentication with appropriate roles:
 
-```typescript
+\`\`\`typescript
 // Headers required for all requests
 {
   "Authorization": "Bearer <jwt_token>",
   "Content-Type": "application/json"
 }
-```
+\`\`\`
 
 ### Core Endpoints
 
 #### Generate Recommendations
 
-```http
+\`\`\`http
 GET /recommendations?limit=10&includeSpecializations=AI,WebDev
-```
+\`\`\`
 
 **Parameters**:
 
@@ -72,7 +72,7 @@ GET /recommendations?limit=10&includeSpecializations=AI,WebDev
 
 **Response**:
 
-```typescript
+\`\`\`typescript
 interface RecommendationResult {
   recommendations: ProjectRecommendation[];
   reasoning: string;
@@ -101,27 +101,27 @@ interface ProjectRecommendation {
   supervisor: SupervisorSummary;
   diversityBoost?: number;
 }
-```
+\`\`\`
 
 #### Refresh Recommendations
 
-```http
+\`\`\`http
 POST /recommendations/refresh
-```
+\`\`\`
 
 Forces regeneration of recommendations, bypassing cache. Useful after profile updates.
 
 #### Get Recommendation History
 
-```http
+\`\`\`http
 GET /recommendations/history
-```
+\`\`\`
 
 Returns past recommendation sets for the authenticated user.
 
 #### Submit Feedback
 
-```http
+\`\`\`http
 POST /recommendations/{recommendationId}/feedback
 Content-Type: application/json
 
@@ -131,13 +131,13 @@ Content-Type: application/json
   "rating": 4.5,
   "comment": "Optional feedback comment"
 }
-```
+\`\`\`
 
 #### Get Explanation
 
-```http
+\`\`\`http
 GET /recommendations/{recommendationId}/explanation?projectId={projectId}
-```
+\`\`\`
 
 Returns detailed explanation of why a project was recommended.
 
@@ -145,19 +145,19 @@ Returns detailed explanation of why a project was recommended.
 
 For long-running recommendation generation:
 
-```http
+\`\`\`http
 POST /recommendations/generate-with-progress
-```
+\`\`\`
 
 Returns a request ID for tracking progress:
 
-```http
+\`\`\`http
 GET /recommendations/progress/{requestId}
-```
+\`\`\`
 
 ### Batch Processing (Admin Only)
 
-```http
+\`\`\`http
 POST /recommendations/batch
 Content-Type: application/json
 
@@ -168,13 +168,13 @@ Content-Type: application/json
     "includeSpecializations": ["AI"]
   }
 }
-```
+\`\`\`
 
 ## Integration Patterns
 
 ### Basic Integration
 
-```typescript
+\`\`\`typescript
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -211,11 +211,11 @@ export class RecommendationService {
     );
   }
 }
-```
+\`\`\`
 
 ### Error Handling
 
-```typescript
+\`\`\`typescript
 import { catchError, retry, timeout } from 'rxjs/operators';
 import { of, throwError } from 'rxjs';
 
@@ -248,11 +248,11 @@ export class RecommendationService {
     return throwError('Unable to get recommendations. Please try again.');
   }
 }
-```
+\`\`\`
 
 ### Caching Strategy
 
-```typescript
+\`\`\`typescript
 @Injectable()
 export class RecommendationCacheService {
   private cache = new Map<
@@ -282,11 +282,11 @@ export class RecommendationCacheService {
     this.cache.clear();
   }
 }
-```
+\`\`\`
 
 ### Progressive Loading Implementation
 
-```typescript
+\`\`\`typescript
 @Injectable()
 export class ProgressiveRecommendationService {
   generateWithProgress(
@@ -322,7 +322,7 @@ interface ProgressUpdate {
   result?: RecommendationResult;
   error?: string;
 }
-```
+\`\`\`
 
 ## Error Handling
 
@@ -341,7 +341,7 @@ interface ProgressUpdate {
 
 ### Error Response Format
 
-```typescript
+\`\`\`typescript
 interface ErrorResponse {
   statusCode: number;
   message: string;
@@ -353,13 +353,13 @@ interface ErrorResponse {
     context?: any;
   };
 }
-```
+\`\`\`
 
 ### Specific Error Handling
 
 #### Rate Limiting
 
-```typescript
+\`\`\`typescript
 class RateLimitHandler {
   private retryAfter: number = 0;
 
@@ -374,11 +374,11 @@ class RateLimitHandler {
     );
   }
 }
-```
+\`\`\`
 
 #### Circuit Breaker Pattern
 
-```typescript
+\`\`\`typescript
 class ClientCircuitBreaker {
   private failures = 0;
   private lastFailure: Date | null = null;
@@ -416,13 +416,13 @@ class ClientCircuitBreaker {
     }
   }
 }
-```
+\`\`\`
 
 ## Performance Optimization
 
 ### Request Optimization
 
-```typescript
+\`\`\`typescript
 // Batch multiple requests
 class BatchRequestService {
   private pendingRequests = new Map<string, Observable<any>>();
@@ -448,11 +448,11 @@ class BatchRequestService {
     return request;
   }
 }
-```
+\`\`\`
 
 ### Lazy Loading
 
-```typescript
+\`\`\`typescript
 // Lazy load recommendation details
 @Component({
   template: `
@@ -475,11 +475,11 @@ export class RecommendationListComponent {
       });
   }
 }
-```
+\`\`\`
 
 ### Pagination
 
-```typescript
+\`\`\`typescript
 class PaginatedRecommendationService {
   getRecommendations(
     page: number = 1,
@@ -504,13 +504,13 @@ interface PaginatedResult {
     hasPrevious: boolean;
   };
 }
-```
+\`\`\`
 
 ## Testing
 
 ### Unit Testing
 
-```typescript
+\`\`\`typescript
 describe('RecommendationService', () => {
   let service: RecommendationService;
   let httpMock: HttpTestingController;
@@ -568,11 +568,11 @@ describe('RecommendationService', () => {
     req.flush({}, { status: 429, statusText: 'Too Many Requests' });
   });
 });
-```
+\`\`\`
 
 ### Integration Testing
 
-```typescript
+\`\`\`typescript
 describe('Recommendation Integration', () => {
   let app: INestApplication;
   let authToken: string;
@@ -607,13 +607,13 @@ describe('Recommendation Integration', () => {
       .expect(400);
   });
 });
-```
+\`\`\`
 
 ## Monitoring and Debugging
 
 ### Client-Side Monitoring
 
-```typescript
+\`\`\`typescript
 @Injectable()
 export class RecommendationMonitoringService {
   private metrics = {
@@ -647,11 +647,11 @@ export class RecommendationMonitoringService {
     return { ...this.metrics };
   }
 }
-```
+\`\`\`
 
 ### Logging
 
-```typescript
+\`\`\`typescript
 @Injectable()
 export class RecommendationLogger {
   logRequest(
@@ -677,13 +677,13 @@ export class RecommendationLogger {
     });
   }
 }
-```
+\`\`\`
 
 ## Security Considerations
 
 ### Input Validation
 
-```typescript
+\`\`\`typescript
 class RecommendationValidator {
   validateOptions(options: RecommendationOptions): ValidationResult {
     const errors: string[] = [];
@@ -705,11 +705,11 @@ class RecommendationValidator {
     };
   }
 }
-```
+\`\`\`
 
 ### Data Sanitization
 
-```typescript
+\`\`\`typescript
 class DataSanitizer {
   sanitizeFeedback(feedback: FeedbackData): FeedbackData {
     return {
@@ -734,7 +734,7 @@ class DataSanitizer {
     return Math.max(1, Math.min(5, rating));
   }
 }
-```
+\`\`\`
 
 ## Best Practices
 
@@ -803,7 +803,7 @@ class DataSanitizer {
 
 ### Debug Tools
 
-```typescript
+\`\`\`typescript
 // Debug helper for recommendation analysis
 class RecommendationDebugger {
   analyzeRecommendations(result: RecommendationResult): DebugInfo {
@@ -835,6 +835,6 @@ class RecommendationDebugger {
     return buckets;
   }
 }
-```
+\`\`\`
 
 This developer guide provides comprehensive information for integrating with the AI-Powered Recommendations system. For the most up-to-date API documentation, always refer to the Swagger/OpenAPI documentation available at `/api/docs` when the application is running.

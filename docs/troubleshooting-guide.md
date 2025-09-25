@@ -28,7 +28,7 @@ Before diving into specific issues, run through this quick checklist:
 
 **Incomplete User Profile**
 
-```bash
+\`\`\`bash
 # Check profile completeness
 GET /users/profile
 
@@ -37,31 +37,31 @@ GET /users/profile
 - interests (at least 2)
 - specialization preferences
 - academic level
-```
+\`\`\`
 
 **Solution**: Guide user to complete their profile with detailed information.
 
 **Overly Restrictive Filters**
 
-```bash
+\`\`\`bash
 # Check if filters are too narrow
 GET /recommendations?minSimilarityScore=0.9&includeSpecializations=VeryNiche
-```
+\`\`\`
 
 **Solution**: Relax filter criteria or remove some filters.
 
 **No Matching Projects**
 
-```bash
+\`\`\`bash
 # Check available projects
 GET /projects?specialization=UserSpecialization&difficultyLevel=UserLevel
-```
+\`\`\`
 
 **Solution**: Expand search criteria or add more projects to the database.
 
 **System Issues**
 
-```bash
+\`\`\`bash
 # Check system health
 GET /ai-health/status
 
@@ -71,7 +71,7 @@ GET /ai-health/status
   "circuitBreakerState": "CLOSED",
   "rateLimitStatus": "ok"
 }
-```
+\`\`\`
 
 **Solution**: If unhealthy, check AI service connectivity and logs.
 
@@ -87,7 +87,7 @@ GET /ai-health/status
 
 **Profile Analysis**
 
-```typescript
+\`\`\`typescript
 // Check profile quality
 const profileQuality = {
   skillsCount: profile.skills?.length || 0,
@@ -100,11 +100,11 @@ const profileQuality = {
 // - Skills: >= 5 specific skills
 // - Interests: >= 3 detailed interests
 // - Specialization: clearly defined
-```
+\`\`\`
 
 **Recommendation Analysis**
 
-```bash
+\`\`\`bash
 # Get detailed explanation
 GET /recommendations/{id}/explanation?projectId={projectId}
 
@@ -113,7 +113,7 @@ GET /recommendations/{id}/explanation?projectId={projectId}
 - Interest alignment score
 - Specialization fit
 - Reasoning clarity
-```
+\`\`\`
 
 #### Solutions
 
@@ -126,7 +126,7 @@ GET /recommendations/{id}/explanation?projectId={projectId}
 
 **Provide Feedback**
 
-```bash
+\`\`\`bash
 # Submit feedback to improve future recommendations
 POST /recommendations/{id}/feedback
 {
@@ -134,14 +134,14 @@ POST /recommendations/{id}/feedback
   "feedbackType": "dislike",
   "comment": "Project doesn't match my AI/ML interests"
 }
-```
+\`\`\`
 
 **Adjust Parameters**
 
-```bash
+\`\`\`bash
 # Try different parameters
 GET /recommendations?includeDiversityBoost=false&minSimilarityScore=0.3
-```
+\`\`\`
 
 ### 3. Slow Recommendation Generation
 
@@ -155,7 +155,7 @@ GET /recommendations?includeDiversityBoost=false&minSimilarityScore=0.3
 
 **Check System Load**
 
-```bash
+\`\`\`bash
 # Monitor AI service metrics
 GET /ai-health/metrics
 
@@ -163,11 +163,11 @@ GET /ai-health/metrics
 - averageResponseTime
 - requestsPerMinute
 - circuitBreakerState
-```
+\`\`\`
 
 **Network Analysis**
 
-```bash
+\`\`\`bash
 # Test API connectivity
 curl -w "@curl-format.txt" -o /dev/null -s "http://api/recommendations"
 
@@ -179,36 +179,36 @@ time_pretransfer: %{time_pretransfer}\n
 time_redirect:    %{time_redirect}\n
 time_starttransfer: %{time_starttransfer}\n
 time_total:       %{time_total}\n
-```
+\`\`\`
 
 #### Solutions
 
 **Use Progressive Loading**
 
-```bash
+\`\`\`bash
 # Start generation with progress tracking
 POST /recommendations/generate-with-progress
 
 # Monitor progress
 GET /recommendations/progress/{requestId}
-```
+\`\`\`
 
 **Leverage Caching**
 
-```bash
+\`\`\`bash
 # Use cached results when available
 GET /recommendations  # Uses cache by default
 
 # Force refresh only when necessary
 POST /recommendations/refresh
-```
+\`\`\`
 
 **Optimize Parameters**
 
-```bash
+\`\`\`bash
 # Reduce complexity
 GET /recommendations?limit=5&includeDiversityBoost=false
-```
+\`\`\`
 
 ### 4. Rate Limiting Issues
 
@@ -222,16 +222,16 @@ GET /recommendations?limit=5&includeDiversityBoost=false
 
 **Check Rate Limit Status**
 
-```bash
+\`\`\`bash
 # Monitor rate limit metrics
 GET /ai-health/metrics
 
 # Check rateLimitHits and requestsPerMinute
-```
+\`\`\`
 
 **Review Request Patterns**
 
-```bash
+\`\`\`bash
 # Analyze request frequency
 GET /ai-health/diagnostics
 
@@ -239,13 +239,13 @@ GET /ai-health/diagnostics
 - Burst request patterns
 - Excessive refresh calls
 - Automated/bot traffic
-```
+\`\`\`
 
 #### Solutions
 
 **Implement Client-Side Rate Limiting**
 
-```typescript
+\`\`\`typescript
 class RateLimitedService {
   private lastRequest = 0;
   private readonly minInterval = 1000; // 1 second between requests
@@ -264,11 +264,11 @@ class RateLimitedService {
     return this.makeRequest();
   }
 }
-```
+\`\`\`
 
 **Use Exponential Backoff**
 
-```typescript
+\`\`\`typescript
 class BackoffService {
   async requestWithBackoff(attempt = 1): Promise<any> {
     try {
@@ -283,17 +283,17 @@ class BackoffService {
     }
   }
 }
-```
+\`\`\`
 
 **Cache Aggressively**
 
-```typescript
+\`\`\`typescript
 // Implement longer cache periods during rate limiting
 const cacheService = new CacheService({
   defaultTTL: 300000, // 5 minutes
   rateLimitTTL: 1800000, // 30 minutes during rate limiting
 });
-```
+\`\`\`
 
 ## Technical Issues
 
@@ -309,7 +309,7 @@ const cacheService = new CacheService({
 
 **Check AI Service Health**
 
-```bash
+\`\`\`bash
 # Manual health check
 POST /ai-health/health-check
 
@@ -318,49 +318,49 @@ GET /ai-health/circuit-breakers
 
 # Review recent errors
 GET /ai-health/diagnostics
-```
+\`\`\`
 
 **Test Hugging Face API**
 
-```bash
+\`\`\`bash
 # Direct API test (replace with actual API key)
 curl -X POST \
   "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"inputs": "test sentence"}'
-```
+\`\`\`
 
 #### Solutions
 
 **API Key Issues**
 
-```bash
+\`\`\`bash
 # Verify API key configuration
 echo $HUGGING_FACE_API_KEY
 
 # Test key validity
 curl -H "Authorization: Bearer $HUGGING_FACE_API_KEY" \
   "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2"
-```
+\`\`\`
 
 **Network Connectivity**
 
-```bash
+\`\`\`bash
 # Test network connectivity
 ping api-inference.huggingface.co
 nslookup api-inference.huggingface.co
 
 # Check firewall rules
 telnet api-inference.huggingface.co 443
-```
+\`\`\`
 
 **Reset Circuit Breaker**
 
-```bash
+\`\`\`bash
 # Manual circuit breaker reset
 POST /ai-health/circuit-breaker/hugging-face-api/reset
-```
+\`\`\`
 
 ### 2. Database Performance Issues
 
@@ -374,7 +374,7 @@ POST /ai-health/circuit-breaker/hugging-face-api/reset
 
 **Check Query Performance**
 
-```sql
+\`\`\`sql
 -- PostgreSQL: Check slow queries
 SELECT query, mean_time, calls, total_time
 FROM pg_stat_statements
@@ -385,11 +385,11 @@ ORDER BY mean_time DESC;
 SELECT schemaname, tablename, attname, n_distinct, correlation
 FROM pg_stats
 WHERE tablename IN ('recommendations', 'ai_api_usage', 'recommendation_feedback');
-```
+\`\`\`
 
 **Monitor Connection Pool**
 
-```bash
+\`\`\`bash
 # Check database connections
 GET /health/metrics
 
@@ -397,13 +397,13 @@ GET /health/metrics
 - Active connections
 - Connection pool utilization
 - Query response times
-```
+\`\`\`
 
 #### Solutions
 
 **Optimize Queries**
 
-```sql
+\`\`\`sql
 -- Add missing indexes
 CREATE INDEX CONCURRENTLY idx_recommendations_student_created
 ON recommendations(student_id, created_at DESC);
@@ -415,11 +415,11 @@ ON ai_api_usage(created_at, success);
 EXPLAIN ANALYZE SELECT * FROM recommendations
 WHERE student_id = 'uuid'
 ORDER BY created_at DESC LIMIT 10;
-```
+\`\`\`
 
 **Connection Pool Tuning**
 
-```typescript
+\`\`\`typescript
 // Optimize TypeORM configuration
 {
   type: 'postgres',
@@ -435,7 +435,7 @@ ORDER BY created_at DESC LIMIT 10;
     idle: 10000,    // Idle timeout
   }
 }
-```
+\`\`\`
 
 ### 3. Memory and Performance Issues
 
@@ -449,18 +449,18 @@ ORDER BY created_at DESC LIMIT 10;
 
 **Memory Analysis**
 
-```bash
+\`\`\`bash
 # Check Node.js memory usage
 GET /health/metrics/system
 
 # Monitor heap usage
 node --inspect app.js
 # Then connect Chrome DevTools for heap analysis
-```
+\`\`\`
 
 **Performance Profiling**
 
-```typescript
+\`\`\`typescript
 // Add performance monitoring
 import { performance } from 'perf_hooks';
 
@@ -474,13 +474,13 @@ class PerformanceMonitor {
     return result;
   }
 }
-```
+\`\`\`
 
 #### Solutions
 
 **Memory Optimization**
 
-```typescript
+\`\`\`typescript
 // Implement proper cleanup
 class RecommendationService {
   private cache = new Map();
@@ -495,14 +495,14 @@ class RecommendationService {
     this.cache.set(key, value);
   }
 }
-```
+\`\`\`
 
 **Garbage Collection Tuning**
 
-```bash
+\`\`\`bash
 # Node.js GC optimization
 node --max-old-space-size=4096 --gc-interval=100 app.js
-```
+\`\`\`
 
 ### 4. Caching Issues
 
@@ -516,18 +516,18 @@ node --max-old-space-size=4096 --gc-interval=100 app.js
 
 **Check Cache Status**
 
-```bash
+\`\`\`bash
 # Monitor cache performance
 GET /health/metrics
 
 # Check Redis connectivity
 redis-cli ping
 redis-cli info memory
-```
+\`\`\`
 
 **Cache Analysis**
 
-```bash
+\`\`\`bash
 # Check cache keys
 redis-cli keys "recommendations:*"
 
@@ -536,13 +536,13 @@ redis-cli ttl "recommendations:user-uuid"
 
 # Monitor cache hit/miss ratio
 redis-cli info stats | grep keyspace
-```
+\`\`\`
 
 #### Solutions
 
 **Cache Invalidation**
 
-```typescript
+\`\`\`typescript
 // Implement proper cache invalidation
 class CacheInvalidationService {
   async invalidateUserRecommendations(userId: string): Promise<void> {
@@ -560,11 +560,11 @@ class CacheInvalidationService {
     await this.invalidateUserAnalytics(userId);
   }
 }
-```
+\`\`\`
 
 **Cache Warming**
 
-```typescript
+\`\`\`typescript
 // Implement cache warming for popular requests
 class CacheWarmingService {
   @Cron('0 */6 * * *') // Every 6 hours
@@ -582,7 +582,7 @@ class CacheWarmingService {
     }
   }
 }
-```
+\`\`\`
 
 ## Error Code Reference
 
@@ -635,7 +635,7 @@ class CacheWarmingService {
 
 ### Alert Thresholds
 
-```yaml
+\`\`\`yaml
 alerts:
   critical:
     - error_rate > 10%
@@ -653,13 +653,13 @@ alerts:
     - new_deployment
     - cache_cleared
     - maintenance_mode
-```
+\`\`\`
 
 ## Debugging Tools and Commands
 
 ### API Testing
 
-```bash
+\`\`\`bash
 # Test basic functionality
 curl -X GET "http://localhost:3000/recommendations" \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -674,11 +674,11 @@ curl -X POST "http://localhost:3000/recommendations/uuid/feedback" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"projectId":"uuid","feedbackType":"like"}'
-```
+\`\`\`
 
 ### Database Queries
 
-```sql
+\`\`\`sql
 -- Check recent recommendations
 SELECT r.id, r.student_id, r.created_at, r.average_similarity_score,
        jsonb_array_length(r.project_suggestions) as suggestion_count
@@ -703,11 +703,11 @@ SELECT feedback_type, COUNT(*) as count,
 FROM recommendation_feedback
 WHERE created_at > NOW() - INTERVAL '7 days'
 GROUP BY feedback_type;
-```
+\`\`\`
 
 ### Log Analysis
 
-```bash
+\`\`\`bash
 # Search for errors in logs
 grep -i "error" /var/log/app.log | tail -20
 
@@ -719,7 +719,7 @@ grep "Recommendation generation" /var/log/app.log | tail -5
 
 # Monitor performance
 grep "responseTimeMs" /var/log/app.log | awk '{print $NF}' | sort -n | tail -10
-```
+\`\`\`
 
 ## Recovery Procedures
 
@@ -727,50 +727,50 @@ grep "responseTimeMs" /var/log/app.log | awk '{print $NF}' | sort -n | tail -10
 
 1. **Identify the Issue**
 
-   ```bash
+   \`\`\`bash
    # Check system health
    GET /ai-health/status
    GET /health
-   ```
+   \`\`\`
 
 2. **Immediate Actions**
 
-   ```bash
+   \`\`\`bash
    # Reset circuit breakers if needed
    POST /ai-health/circuit-breaker/hugging-face-api/reset
 
    # Clear problematic cache entries
    redis-cli flushdb
-   ```
+   \`\`\`
 
 3. **Service Restart**
 
-   ```bash
+   \`\`\`bash
    # Graceful restart
    pm2 restart app
 
    # Or with Docker
    docker-compose restart backend
-   ```
+   \`\`\`
 
 ### Data Recovery
 
 1. **Backup Verification**
 
-   ```bash
+   \`\`\`bash
    # Check recent backups
    ls -la /backups/ | head -5
 
    # Verify backup integrity
    pg_restore --list backup.sql | head -10
-   ```
+   \`\`\`
 
 2. **Selective Recovery**
-   ```sql
+   \`\`\`sql
    -- Restore specific tables if needed
    pg_restore -t recommendations backup.sql
    pg_restore -t ai_api_usage backup.sql
-   ```
+   \`\`\`
 
 ## Prevention Strategies
 
