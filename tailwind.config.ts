@@ -13,10 +13,38 @@ const config = {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: {
+        DEFAULT: "1rem",
+        sm: "1.5rem",
+        md: "2rem",
+        lg: "2.5rem",
+        xl: "3rem",
+        "2xl": "4rem",
+      },
       screens: {
+        sm: "640px",
+        md: "768px",
+        lg: "1024px",
+        xl: "1280px",
         "2xl": "1400px",
       },
+    },
+    screens: {
+      xs: "480px",
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
+      "3xl": "1920px",
+      // Touch-specific breakpoints
+      "touch-sm": { raw: "(max-width: 767px) and (pointer: coarse)" },
+      "touch-lg": { raw: "(min-width: 768px) and (pointer: coarse)" },
+      // Orientation breakpoints
+      "portrait": { raw: "(orientation: portrait)" },
+      "landscape": { raw: "(orientation: landscape)" },
+      // High DPI screens
+      "retina": { raw: "(-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi)" },
     },
     extend: {
       colors: {

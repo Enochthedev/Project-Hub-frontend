@@ -1,25 +1,67 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { ProjectCard } from "@/components/shared/project-card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { X, Search, Filter, SlidersHorizontal } from "lucide-react"
+import { X, Search, Filter, SlidersHorizontal, ArrowUpDown, Loader2 } from "lucide-react"
 import { useProjects } from "@/components/providers/projects-provider"
 import { AIAssistantButton } from "@/components/ai/assistant-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useMobile } from "@/hooks/use-mobile"
+import { useProjectsStore } from "@/lib/stores/projects-store"
+import { SearchFilters } from "@/lib/api/types"
+import { Skeleton } from "@/components/ui/skeleton"
+import { ResponsiveContainer } from "@/components/ui/responsive-container"
+import { cn } from "@/lib/utils"
+import { ResponsiveGrid } from "@/components/ui/responsive-grid"
+import { TouchButton } from "@/components/ui/touch-button"
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationEllipsis, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious 
+} from "@/components/ui/pagination"
 
-const categories = ["All", "Web", "Mobile", "AI", "Data Science", "Game Dev", "IoT", "Blockchain"]
+// Updated categories based on API specializations
+const specializations = [
+  "All", 
+  "AI", 
+  "ML", 
+  "WebDev", 
+  "MobileDev", 
+  "DataScience", 
+  "Cybersecurity", 
+  "IoT", 
+  "Blockchain", 
+  "GameDev", 
+  "DevOps"
+]
 
-const difficulties = ["All", "Beginner", "Intermediate", "Advanced"]
+const difficulties = ["All", "beginner", "intermediate", "advanced", "expert"]
 
-const allTags = [
+const sortOptions = [
+  { value: "relevance", label: "Relevance" },
+  { value: "date", label: "Date Created" },
+  { value: "title", label: "Title" },
+  { value: "popularity", label: "Popularity" },
+]
+
+const sortOrders = [
+  { value: "desc", label: "Descending" },
+  { value: "asc", label: "Ascending" },
+]
+
+// Common tags for filtering
+const commonTags = [
   "JavaScript",
   "Python",
   "React",
@@ -33,96 +75,205 @@ const allTags = [
   "Frontend",
   "Backend",
   "Full Stack",
+  "Node.js",
+  "TypeScript",
+  "Vue.js",
+  "Angular",
+  "Django",
+  "Flask",
+  "Spring Boot",
+  "Docker",
+  "Kubernetes",
+  "AWS",
+  "Azure",
+  "GCP",
 ]
 
 export default function ExplorePage() {
-  const { allProjects } = useProjects()
-  const { isMobile } = useMobile()
-  const [filters, setFilters] = useState({
-    category: "All",
-    difficulty: "All",
-    search: "",
-    tags: [] as string[],
-    groupProjects: false,
+  const { isMobile, isMobileSmall, isTablet, isTouch } = useMobile()
+  const projectsStore = useProjectsStore()
+  
+  // Local state for filters and UI
+  const [localFilters, setLocalFilters] = useState<SearchFilters>({
+    query: "",
+    specializations: [],
+    difficultyLevels: [],
+    tags: [],
+    isGroupProject: undefined,
+    sortBy: "relevance",
+    sortOrder: "desc",
+    limit: 12,
+    offset: 0,
   })
+  
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      handleSearch()
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [localFilters.query])
+
+  // Search projects when filters change (except query which is debounced)
+  useEffect(() => {
+    if (localFilters.specializations?.length || 
+        localFilters.difficultyLevels?.length || 
+        localFilters.tags?.length || 
+        localFilters.isGroupProject !== undefined ||
+        localFilters.sortBy !== "relevance" ||
+        localFilters.sortOrder !== "desc") {
+      handleSearch()
+    }
+  }, [
+    localFilters.specializations,
+    localFilters.difficultyLevels,
+    localFilters.tags,
+    localFilters.isGroupProject,
+    localFilters.sortBy,
+    localFilters.sortOrder,
+  ])
+
+  // Load initial projects
+  useEffect(() => {
+    handleSearch()
+  }, [])
+
+  const handleSearch = useCallback(async () => {
+    try {
+      const searchFilters = {
+        ...localFilters,
+        offset: 0, // Reset to first page on new search
+      }
+      await projectsStore.searchProjects(searchFilters)
+      setCurrentPage(1)
+    } catch (error) {
+      console.error('Search failed:', error)
+    }
+  }, [localFilters, projectsStore])
+
+  const handlePageChange = useCallback(async (page: number) => {
+    const offset = (page - 1) * (localFilters.limit || 12)
+    try {
+      const searchFilters = {
+        ...localFilters,
+        offset,
+      }
+      await projectsStore.searchProjects(searchFilters)
+      setCurrentPage(page)
+    } catch (error) {
+      console.error('Page change failed:', error)
+    }
+  }, [localFilters, projectsStore])
 
   const handleTagToggle = (tag: string) => {
-    setFilters((prev) => ({
+    const newTags = selectedTags.includes(tag) 
+      ? selectedTags.filter((t) => t !== tag)
+      : [...selectedTags, tag]
+    
+    setSelectedTags(newTags)
+    setLocalFilters(prev => ({
       ...prev,
-      tags: prev.tags.includes(tag) ? prev.tags.filter((t) => t !== tag) : [...prev.tags, tag],
+      tags: newTags,
     }))
   }
 
-  const filteredProjects = allProjects.filter((project) => {
-    // Filter by category
-    if (filters.category !== "All" && project.category !== filters.category) {
-      return false
-    }
+  const handleSpecializationChange = (specialization: string) => {
+    const newSpecializations = specialization === "All" 
+      ? [] 
+      : [specialization]
+    
+    setLocalFilters(prev => ({
+      ...prev,
+      specializations: newSpecializations,
+    }))
+  }
 
-    // Filter by difficulty
-    if (filters.difficulty !== "All" && project.difficulty !== filters.difficulty) {
-      return false
-    }
+  const handleDifficultyChange = (difficulty: string) => {
+    const newDifficulties = difficulty === "All" 
+      ? [] 
+      : [difficulty]
+    
+    setLocalFilters(prev => ({
+      ...prev,
+      difficultyLevels: newDifficulties,
+    }))
+  }
 
-    // Filter by search
-    if (
-      filters.search &&
-      !project.title.toLowerCase().includes(filters.search.toLowerCase()) &&
-      !project.description.toLowerCase().includes(filters.search.toLowerCase())
-    ) {
-      return false
-    }
+  const clearAllFilters = () => {
+    setLocalFilters({
+      query: "",
+      specializations: [],
+      difficultyLevels: [],
+      tags: [],
+      isGroupProject: undefined,
+      sortBy: "relevance",
+      sortOrder: "desc",
+      limit: 12,
+      offset: 0,
+    })
+    setSelectedTags([])
+    setCurrentPage(1)
+  }
 
-    // Filter by tags
-    if (filters.tags.length > 0 && !filters.tags.some((tag) => project.tags.includes(tag))) {
-      return false
-    }
+  // Calculate pagination
+  const totalPages = projectsStore.searchResults 
+    ? Math.ceil(projectsStore.searchResults.total / (localFilters.limit || 12))
+    : 0
 
-    // Filter by group projects
-    if (filters.groupProjects && !project.isGroupProject) {
-      return false
-    }
-
-    return true
-  })
+  const hasActiveFilters = useMemo(() => {
+    return localFilters.query ||
+           localFilters.specializations?.length ||
+           localFilters.difficultyLevels?.length ||
+           localFilters.tags?.length ||
+           localFilters.isGroupProject !== undefined ||
+           localFilters.sortBy !== "relevance" ||
+           localFilters.sortOrder !== "desc"
+  }, [localFilters])
 
   const FiltersContent = () => (
     <div className="space-y-6">
+      {/* Specialization Filter */}
       <div className="space-y-2">
-        <Label htmlFor="category" className="text-[#534D56] dark:text-[#F8F1FF]">
-          Category
+        <Label htmlFor="specialization" className="text-[#534D56] dark:text-[#F8F1FF]">
+          Specialization
         </Label>
         <Select
-          value={filters.category}
-          onValueChange={(value) => setFilters((prev) => ({ ...prev, category: value }))}
+          value={localFilters.specializations?.[0] || "All"}
+          onValueChange={handleSpecializationChange}
         >
           <SelectTrigger
-            id="category"
+            id="specialization"
             className="border-[#DECDF5] bg-white dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF]"
           >
-            <SelectValue placeholder="Select category" />
+            <SelectValue placeholder="Select specialization" />
           </SelectTrigger>
           <SelectContent className="bg-white dark:bg-[#534D56] border-[#DECDF5] dark:border-[#656176]">
-            {categories.map((category) => (
+            {specializations.map((specialization) => (
               <SelectItem
-                key={category}
-                value={category}
+                key={specialization}
+                value={specialization}
                 className="text-[#534D56] dark:text-[#F8F1FF] focus:bg-[#DECDF5]/20 dark:focus:bg-[#656176]/50"
               >
-                {category}
+                {specialization === "All" ? "All Specializations" : specialization}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
+      {/* Difficulty Filter */}
       <div className="space-y-2">
         <Label htmlFor="difficulty" className="text-[#534D56] dark:text-[#F8F1FF]">
-          Difficulty
+          Difficulty Level
         </Label>
         <Select
-          value={filters.difficulty}
-          onValueChange={(value) => setFilters((prev) => ({ ...prev, difficulty: value }))}
+          value={localFilters.difficultyLevels?.[0] || "All"}
+          onValueChange={handleDifficultyChange}
         >
           <SelectTrigger
             id="difficulty"
@@ -137,18 +288,24 @@ export default function ExplorePage() {
                 value={difficulty}
                 className="text-[#534D56] dark:text-[#F8F1FF] focus:bg-[#DECDF5]/20 dark:focus:bg-[#656176]/50"
               >
-                {difficulty}
+                {difficulty === "All" ? "All Levels" : difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
+      {/* Group Projects Filter */}
       <div className="flex items-center space-x-2">
         <Switch
           id="group-projects"
-          checked={filters.groupProjects}
-          onCheckedChange={(checked) => setFilters((prev) => ({ ...prev, groupProjects: checked }))}
+          checked={localFilters.isGroupProject === true}
+          onCheckedChange={(checked) => 
+            setLocalFilters(prev => ({ 
+              ...prev, 
+              isGroupProject: checked ? true : undefined 
+            }))
+          }
           className="data-[state=checked]:bg-[#1B998B]"
         />
         <Label htmlFor="group-projects" className="text-[#534D56] dark:text-[#F8F1FF]">
@@ -156,78 +313,179 @@ export default function ExplorePage() {
         </Label>
       </div>
 
+      {/* Sorting Options */}
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="sort-by" className="text-[#534D56] dark:text-[#F8F1FF]">
+            Sort By
+          </Label>
+          <Select
+            value={localFilters.sortBy || "relevance"}
+            onValueChange={(value) => 
+              setLocalFilters(prev => ({ 
+                ...prev, 
+                sortBy: value as SearchFilters['sortBy']
+              }))
+            }
+          >
+            <SelectTrigger
+              id="sort-by"
+              className="border-[#DECDF5] bg-white dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF]"
+            >
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-[#534D56] border-[#DECDF5] dark:border-[#656176]">
+              {sortOptions.map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className="text-[#534D56] dark:text-[#F8F1FF] focus:bg-[#DECDF5]/20 dark:focus:bg-[#656176]/50"
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="sort-order" className="text-[#534D56] dark:text-[#F8F1FF]">
+            Sort Order
+          </Label>
+          <Select
+            value={localFilters.sortOrder || "desc"}
+            onValueChange={(value) => 
+              setLocalFilters(prev => ({ 
+                ...prev, 
+                sortOrder: value as SearchFilters['sortOrder']
+              }))
+            }
+          >
+            <SelectTrigger
+              id="sort-order"
+              className="border-[#DECDF5] bg-white dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF]"
+            >
+              <SelectValue placeholder="Sort order" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-[#534D56] border-[#DECDF5] dark:border-[#656176]">
+              {sortOrders.map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className="text-[#534D56] dark:text-[#F8F1FF] focus:bg-[#DECDF5]/20 dark:focus:bg-[#656176]/50"
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Tags Filter */}
       <div className="space-y-2">
         <Label className="text-[#534D56] dark:text-[#F8F1FF]">Tags</Label>
-        <div className="flex flex-wrap gap-2">
-          {allTags.map((tag) => (
+        <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+          {commonTags.map((tag) => (
             <Badge
               key={tag}
-              variant={filters.tags.includes(tag) ? "default" : "outline"}
+              variant={selectedTags.includes(tag) ? "default" : "outline"}
               className={
-                filters.tags.includes(tag)
+                selectedTags.includes(tag)
                   ? "cursor-pointer bg-[#1B998B] hover:bg-[#1B998B]/90"
                   : "cursor-pointer border-[#DECDF5] hover:bg-[#DECDF5]/50 dark:border-[#656176] dark:hover:bg-[#656176]/50"
               }
               onClick={() => handleTagToggle(tag)}
             >
               {tag}
-              {filters.tags.includes(tag) && <X className="ml-1 h-3 w-3" />}
+              {selectedTags.includes(tag) && <X className="ml-1 h-3 w-3" />}
             </Badge>
           ))}
         </div>
       </div>
+
+      {/* Clear Filters */}
+      {hasActiveFilters && (
+        <Button
+          variant="outline"
+          onClick={clearAllFilters}
+          className="w-full border-[#DECDF5] text-[#534D56] dark:border-[#656176] dark:text-[#F8F1FF]"
+        >
+          Clear All Filters
+        </Button>
+      )}
     </div>
   )
 
   return (
-    <main className="container py-12">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#534D56] dark:text-[#F8F1FF] sm:text-4xl">
-            Explore Projects
-          </h1>
-          <p className="mt-2 text-[#656176] dark:text-[#DECDF5]">
-            Browse through our collection of project ideas for students.
-          </p>
+    <main className="min-h-screen">
+      <ResponsiveContainer className={cn("py-8", isMobileSmall ? "py-6" : "py-12")}>
+        <div className={cn("mb-8 flex flex-col gap-4", !isMobile && "sm:flex-row sm:items-center sm:justify-between")}>
+          <div>
+            <h1 className={cn(
+              "font-bold tracking-tight text-[#534D56] dark:text-[#F8F1FF]",
+              isMobileSmall ? "text-2xl" : "text-3xl sm:text-4xl"
+            )}>
+              Explore Projects
+            </h1>
+            <p className={cn(
+              "mt-2 text-[#656176] dark:text-[#DECDF5]",
+              isMobileSmall ? "text-sm" : "text-base"
+            )}>
+              Browse through our collection of project ideas for students.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {isMobile && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <TouchButton
+                    variant="outline"
+                    size={isMobileSmall ? "sm" : "default"}
+                    className="gap-2 border-[#DECDF5] bg-white dark:border-[#656176] dark:bg-[#656176]/50 text-[#534D56] dark:text-[#F8F1FF]"
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                    Filters
+                  </TouchButton>
+                </SheetTrigger>
+                <SheetContent 
+                  side="right" 
+                  className={cn(
+                    "bg-white dark:bg-[#534D56] border-[#DECDF5] dark:border-[#656176]",
+                    isMobileSmall ? "w-[90vw] max-w-[320px]" : "w-[350px]"
+                  )}
+                >
+                  <SheetHeader>
+                    <SheetTitle className="text-[#534D56] dark:text-[#F8F1FF]">Filters</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6 overflow-y-auto max-h-[calc(100vh-120px)]">
+                    <FiltersContent />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {isMobile && (
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 border-[#DECDF5] bg-white dark:border-[#656176] dark:bg-[#656176]/50 text-[#534D56] dark:text-[#F8F1FF]"
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                  Filters
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="bg-white dark:bg-[#534D56] border-[#DECDF5] dark:border-[#656176]">
-                <SheetHeader>
-                  <SheetTitle className="text-[#534D56] dark:text-[#F8F1FF]">Filters</SheetTitle>
-                </SheetHeader>
-                <div className="mt-6">
-                  <FiltersContent />
-                </div>
-              </SheetContent>
-            </Sheet>
+        {/* Enhanced Search Bar */}
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#656176] dark:text-[#DECDF5]" />
+          <Input
+            placeholder={isMobileSmall ? "Search projects..." : "Search projects by title, description, or tags..."}
+            className={cn(
+              "pl-9 pr-4 border-[#DECDF5] bg-white dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF]",
+              isMobileSmall ? "h-12 text-base" : "h-10"
+            )}
+            value={localFilters.query || ""}
+            onChange={(e) => setLocalFilters(prev => ({ ...prev, query: e.target.value }))}
+          />
+          {projectsStore.isLoading && (
+            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[#656176] dark:text-[#DECDF5]" />
           )}
         </div>
-      </div>
 
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#656176] dark:text-[#DECDF5]" />
-        <Input
-          placeholder="Search projects..."
-          className="pl-9 border-[#DECDF5] bg-white dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF]"
-          value={filters.search}
-          onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
-        />
-      </div>
-
-      <div className="grid gap-8 md:grid-cols-[300px_1fr]">
+        <div className={cn("grid gap-6", !isMobile && "md:grid-cols-[300px_1fr] lg:gap-8")}>
         {!isMobile && (
           <Card className="h-fit border-[#DECDF5] bg-white dark:border-[#656176] dark:bg-[#656176]/30">
             <CardHeader>
@@ -242,37 +500,265 @@ export default function ExplorePage() {
         )}
 
         <div>
-          <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-[#656176] dark:text-[#DECDF5]">Showing {filteredProjects.length} projects</p>
-            {filters.tags.length > 0 && (
+          {/* Results Header */}
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-[#656176] dark:text-[#DECDF5]">
+                {projectsStore.searchResults ? (
+                  <>
+                    Showing {projectsStore.searchResults.projects.length} of {projectsStore.searchResults.total} projects
+                    {currentPage > 1 && ` (Page ${currentPage} of ${totalPages})`}
+                  </>
+                ) : (
+                  "Loading projects..."
+                )}
+              </p>
+              {projectsStore.isLoading && (
+                <Loader2 className="h-4 w-4 animate-spin text-[#656176] dark:text-[#DECDF5]" />
+              )}
+            </div>
+            
+            {hasActiveFilters && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setFilters((prev) => ({ ...prev, tags: [] }))}
-                className="text-xs text-[#534D56] dark:text-[#F8F1FF]"
+                onClick={clearAllFilters}
+                className="text-xs text-[#534D56] dark:text-[#F8F1FF] hover:bg-[#DECDF5]/20 dark:hover:bg-[#656176]/20"
               >
-                Clear filters
+                Clear all filters
               </Button>
             )}
           </div>
 
-          {filteredProjects.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-[#DECDF5] dark:border-[#656176] p-8 text-center">
-              <h3 className="text-lg font-medium text-[#534D56] dark:text-[#F8F1FF]">No projects found</h3>
-              <p className="mt-2 text-sm text-[#656176] dark:text-[#DECDF5]">
-                Try adjusting your filters to find more projects.
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredProjects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
+          {/* Active Filters Display */}
+          {hasActiveFilters && (
+            <div className="mb-4 flex flex-wrap gap-2">
+              {localFilters.specializations?.map((spec) => (
+                <Badge
+                  key={spec}
+                  variant="secondary"
+                  className="bg-[#1B998B]/10 text-[#1B998B] border-[#1B998B]/20"
+                >
+                  {spec}
+                  <X 
+                    className="ml-1 h-3 w-3 cursor-pointer" 
+                    onClick={() => handleSpecializationChange("All")}
+                  />
+                </Badge>
+              ))}
+              {localFilters.difficultyLevels?.map((diff) => (
+                <Badge
+                  key={diff}
+                  variant="secondary"
+                  className="bg-[#1B998B]/10 text-[#1B998B] border-[#1B998B]/20"
+                >
+                  {diff.charAt(0).toUpperCase() + diff.slice(1)}
+                  <X 
+                    className="ml-1 h-3 w-3 cursor-pointer" 
+                    onClick={() => handleDifficultyChange("All")}
+                  />
+                </Badge>
+              ))}
+              {localFilters.isGroupProject && (
+                <Badge
+                  variant="secondary"
+                  className="bg-[#1B998B]/10 text-[#1B998B] border-[#1B998B]/20"
+                >
+                  Group Projects
+                  <X 
+                    className="ml-1 h-3 w-3 cursor-pointer" 
+                    onClick={() => setLocalFilters(prev => ({ ...prev, isGroupProject: undefined }))}
+                  />
+                </Badge>
+              )}
+              {selectedTags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="bg-[#1B998B]/10 text-[#1B998B] border-[#1B998B]/20"
+                >
+                  {tag}
+                  <X 
+                    className="ml-1 h-3 w-3 cursor-pointer" 
+                    onClick={() => handleTagToggle(tag)}
+                  />
+                </Badge>
               ))}
             </div>
           )}
+
+          {/* Error State */}
+          {projectsStore.error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center dark:border-red-800 dark:bg-red-950/30">
+              <h3 className="text-lg font-medium text-red-800 dark:text-red-200">Error Loading Projects</h3>
+              <p className="mt-2 text-sm text-red-600 dark:text-red-300">
+                {projectsStore.error}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  projectsStore.clearError()
+                  handleSearch()
+                }}
+                className="mt-3"
+              >
+                Try Again
+              </Button>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {projectsStore.isLoading && !projectsStore.searchResults && (
+            <ResponsiveGrid
+              cols={{
+                xs: 1,
+                sm: isMobileSmall ? 1 : 2,
+                md: 2,
+                lg: 3,
+                xl: 3,
+                "2xl": 4
+              }}
+              gap={isMobileSmall ? "sm" : "md"}
+            >
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="border-[#DECDF5] dark:border-[#656176]">
+                  <CardHeader className={cn(isMobileSmall ? "p-4" : "p-6")}>
+                    <Skeleton className="h-6 w-3/4" />
+                    <div className="flex gap-2 pt-2">
+                      <Skeleton className="h-5 w-16" />
+                      <Skeleton className="h-5 w-20" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className={cn(isMobileSmall ? "p-4 pt-0" : "p-6 pt-0")}>
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-2/3 mb-4" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <div className="flex gap-1">
+                        <Skeleton className="h-5 w-16" />
+                        <Skeleton className="h-5 w-12" />
+                        <Skeleton className="h-5 w-20" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </ResponsiveGrid>
+          )}
+
+          {/* No Results State */}
+          {!projectsStore.isLoading && projectsStore.searchResults && projectsStore.searchResults.projects.length === 0 && (
+            <div className="rounded-lg border border-dashed border-[#DECDF5] dark:border-[#656176] p-8 text-center">
+              <h3 className="text-lg font-medium text-[#534D56] dark:text-[#F8F1FF]">No projects found</h3>
+              <p className="mt-2 text-sm text-[#656176] dark:text-[#DECDF5]">
+                {hasActiveFilters 
+                  ? "Try adjusting your filters to find more projects."
+                  : "No projects are currently available."
+                }
+              </p>
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  onClick={clearAllFilters}
+                  className="mt-4"
+                >
+                  Clear All Filters
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Projects Grid */}
+          {!projectsStore.isLoading && projectsStore.searchResults && projectsStore.searchResults.projects.length > 0 && (
+            <>
+              <ResponsiveGrid
+                cols={{
+                  xs: 1,
+                  sm: isMobileSmall ? 1 : 2,
+                  md: 2,
+                  lg: 3,
+                  xl: 3,
+                  "2xl": 4
+                }}
+                gap={isMobileSmall ? "sm" : "md"}
+                className="w-full"
+              >
+                {projectsStore.searchResults.projects.map((project) => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
+              </ResponsiveGrid>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                          className={currentPage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                      
+                      {/* Page Numbers */}
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum: number
+                        if (totalPages <= 5) {
+                          pageNum = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i
+                        } else {
+                          pageNum = currentPage - 2 + i
+                        }
+                        
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink
+                              onClick={() => handlePageChange(pageNum)}
+                              isActive={currentPage === pageNum}
+                              className="cursor-pointer"
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      })}
+                      
+                      {totalPages > 5 && currentPage < totalPages - 2 && (
+                        <>
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                          <PaginationItem>
+                            <PaginationLink
+                              onClick={() => handlePageChange(totalPages)}
+                              className="cursor-pointer"
+                            >
+                              {totalPages}
+                            </PaginationLink>
+                          </PaginationItem>
+                        </>
+                      )}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                          className={currentPage >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </>
+          )}
         </div>
-      </div>
-      <AIAssistantButton />
+        </div>
+        <AIAssistantButton />
+      </ResponsiveContainer>
     </main>
   )
 }

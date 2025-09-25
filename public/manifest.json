@@ -1,0 +1,126 @@
+{
+    "name": "Project Hub - Build smarter projects",
+    "short_name": "Project Hub",
+    "description": "Project ideas, matched to your brain and your semester.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#F8F1FF",
+    "theme_color": "#1B998B",
+    "orientation": "portrait-primary",
+    "categories": [
+        "education",
+        "productivity",
+        "utilities"
+    ],
+    "lang": "en",
+    "dir": "ltr",
+    "icons": [
+        {
+            "src": "/icons/icon-72x72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-96x96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-128x128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-144x144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-152x152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-384x384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable any"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/screenshots/desktop-1.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Project Hub Desktop View"
+        },
+        {
+            "src": "/screenshots/mobile-1.png",
+            "sizes": "375x667",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Project Hub Mobile View"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Explore Projects",
+            "short_name": "Explore",
+            "description": "Browse project ideas",
+            "url": "/explore",
+            "icons": [
+                {
+                    "src": "/icons/shortcut-explore.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "AI Assistant",
+            "short_name": "AI",
+            "description": "Get AI recommendations",
+            "url": "/assistant",
+            "icons": [
+                {
+                    "src": "/icons/shortcut-ai.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Saved Projects",
+            "short_name": "Saved",
+            "description": "View bookmarked projects",
+            "url": "/saved",
+            "icons": [
+                {
+                    "src": "/icons/shortcut-saved.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ],
+    "related_applications": [],
+    "prefer_related_applications": false,
+    "edge_side_panel": {
+        "preferred_width": 400
+    }
+}

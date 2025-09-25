@@ -1,64 +1,129 @@
+"use client"
+
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useAuthStore } from '@/lib/stores/auth-store'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Loader2 } from 'lucide-react'
+import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
+
 export default function LoginPage() {
+  const router = useRouter()
+  const { login, isLoading, error, clearError } = useAuthStore()
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      rememberMe: false,
+    }
+  })
+
+  const onSubmit = async (data: LoginFormData) => {
+    clearError()
+
+    try {
+      await login(data.email, data.password, data.rememberMe)
+      router.push('/explore') // Redirect to explore page after successful login
+    } catch (error) {
+      // Error is handled by the store
+      console.error('Login failed:', error)
+    }
+  }
+
   return (
     <main className="container py-20">
       <div className="mx-auto max-w-md">
         <h1 className="text-center text-3xl font-bold text-[#534D56] dark:text-[#F8F1FF]">Log in to Project Hub</h1>
         <p className="mt-2 text-center text-[#656176] dark:text-[#DECDF5]">Welcome back! Please enter your details.</p>
+        
         <div className="mt-8 rounded-lg border border-[#DECDF5] bg-white p-6 shadow-sm dark:border-[#656176] dark:bg-[#656176]/30">
-          <form className="space-y-4">
+          {error && (
+            <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="block text-sm font-medium text-[#534D56] dark:text-[#F8F1FF]">
+              <Label htmlFor="email" className="text-[#534D56] dark:text-[#F8F1FF]">
                 Email
-              </label>
-              <input
+              </Label>
+              <Input
                 id="email"
-                name="email"
                 type="email"
                 autoComplete="email"
-                required
-                className="block w-full rounded-md border border-[#DECDF5] bg-white px-3 py-2 text-[#534D56] shadow-sm focus:border-[#1B998B] focus:outline-none focus:ring-1 focus:ring-[#1B998B] dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF]"
+                {...register('email')}
+                className="border-[#DECDF5] bg-white text-[#534D56] focus:border-[#1B998B] focus:ring-[#1B998B] dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF]"
+                disabled={isLoading}
               />
+              {errors.email && (
+                <p className="text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="block text-sm font-medium text-[#534D56] dark:text-[#F8F1FF]">
+                <Label htmlFor="password" className="text-[#534D56] dark:text-[#F8F1FF]">
                   Password
-                </label>
-                <a href="#" className="text-sm font-medium text-[#1B998B] hover:text-[#1B998B]/80">
+                </Label>
+                <Link href="/forgot-password" className="text-sm font-medium text-[#1B998B] hover:text-[#1B998B]/80">
                   Forgot password?
-                </a>
+                </Link>
               </div>
-              <input
+              <Input
                 id="password"
-                name="password"
                 type="password"
                 autoComplete="current-password"
-                required
-                className="block w-full rounded-md border border-[#DECDF5] bg-white px-3 py-2 text-[#534D56] shadow-sm focus:border-[#1B998B] focus:outline-none focus:ring-1 focus:ring-[#1B998B] dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF]"
+                {...register('password')}
+                className="border-[#DECDF5] bg-white text-[#534D56] focus:border-[#1B998B] focus:ring-[#1B998B] dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF]"
+                disabled={isLoading}
               />
+              {errors.password && (
+                <p className="text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
+              )}
             </div>
 
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 rounded border-[#DECDF5] text-[#1B998B] focus:ring-[#1B998B] dark:border-[#656176]"
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="rememberMe"
+                checked={watch('rememberMe')}
+                onCheckedChange={(checked) => setValue('rememberMe', checked as boolean)}
+                className="border-[#DECDF5] text-[#1B998B] focus:ring-[#1B998B] dark:border-[#656176]"
+                disabled={isLoading}
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-[#656176] dark:text-[#DECDF5]">
+              <Label htmlFor="rememberMe" className="text-sm text-[#656176] dark:text-[#DECDF5]">
                 Remember me
-              </label>
+              </Label>
             </div>
 
-            <div>
-              <button
-                type="submit"
-                className="flex w-full justify-center rounded-md bg-[#1B998B] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#1B998B]/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B998B]"
-              >
-                Log in
-              </button>
-            </div>
+            <Button
+              type="submit"
+              className="w-full bg-[#1B998B] hover:bg-[#1B998B]/90 focus-visible:ring-[#1B998B]"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                'Log in'
+              )}
+            </Button>
           </form>
 
           <div className="mt-6">
@@ -74,9 +139,11 @@ export default function LoginPage() {
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <button
+              <Button
                 type="button"
-                className="flex w-full items-center justify-center rounded-md border border-[#DECDF5] bg-white px-3 py-2 text-sm font-medium text-[#534D56] shadow-sm hover:bg-[#F8F1FF] dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF] dark:hover:bg-[#656176]"
+                variant="outline"
+                className="border-[#DECDF5] bg-white text-[#534D56] hover:bg-[#F8F1FF] dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF] dark:hover:bg-[#656176]"
+                disabled={isLoading}
               >
                 <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                   <path
@@ -97,24 +164,26 @@ export default function LoginPage() {
                   />
                 </svg>
                 Google
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="flex w-full items-center justify-center rounded-md border border-[#DECDF5] bg-white px-3 py-2 text-sm font-medium text-[#534D56] shadow-sm hover:bg-[#F8F1FF] dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF] dark:hover:bg-[#656176]"
+                variant="outline"
+                className="border-[#DECDF5] bg-white text-[#534D56] hover:bg-[#F8F1FF] dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF] dark:hover:bg-[#656176]"
+                disabled={isLoading}
               >
                 <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                 </svg>
                 GitHub
-              </button>
+              </Button>
             </div>
           </div>
 
           <p className="mt-6 text-center text-sm text-[#656176] dark:text-[#DECDF5]">
             Don't have an account?{" "}
-            <a href="/signup" className="font-medium text-[#1B998B] hover:text-[#1B998B]/80">
+            <Link href="/signup" className="font-medium text-[#1B998B] hover:text-[#1B998B]/80">
               Sign up
-            </a>
+            </Link>
           </p>
         </div>
       </div>
