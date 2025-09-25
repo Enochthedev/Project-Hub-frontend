@@ -5,6 +5,8 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
+    "dev:mock": "cp .env.mock .env.local && next dev",
+    "dev:backend": "cp .env.development .env.local && next dev",
     "lint": "next lint",
     "start": "next start",
     "test": "jest",
@@ -170,8 +172,14 @@
     "eslint-config-next": "15.5.4",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "msw": "^2.11.3",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

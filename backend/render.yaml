@@ -32,7 +32,7 @@ services:
       - key: JWT_REFRESH_EXPIRES_IN
         value: 7d
       - key: FRONTEND_URL
-        value: https://project-hub-frontend.onrender.com
+        value: myprojecthub.vercel.app
       - key: THROTTLE_TTL
         value: 60
       - key: THROTTLE_LIMIT

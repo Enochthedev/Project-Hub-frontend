@@ -12,6 +12,7 @@ import { AuthInitializer } from "@/components/auth/auth-initializer"
 import { Toaster } from "@/components/ui/sonner"
 import { InstallPrompt } from "@/components/pwa/install-prompt"
 import { NetworkStatus } from "@/components/pwa/network-status"
+import { MockAPIInitializer } from "@/components/providers/mock-api-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -58,9 +59,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <QueryProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-            <AuthInitializer>
-              <ProjectsProvider>
-                <AIProvider>
+            <MockAPIInitializer>
+              <AuthInitializer>
+                <ProjectsProvider>
+                  <AIProvider>
                   <div className="flex min-h-screen flex-col bg-[#F8F1FF] dark:bg-[#534D56] safe-area-top safe-area-bottom">
                     <Header />
                     <div className="flex-1">{children}</div>
@@ -69,9 +71,10 @@ export default function RootLayout({
                     <NetworkStatus />
                   </div>
                   <Toaster />
-                </AIProvider>
-              </ProjectsProvider>
-            </AuthInitializer>
+                  </AIProvider>
+                </ProjectsProvider>
+              </AuthInitializer>
+            </MockAPIInitializer>
           </ThemeProvider>
         </QueryProvider>
       </body>

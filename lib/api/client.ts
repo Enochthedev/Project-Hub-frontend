@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } f
 
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === 'true'
 const REQUEST_TIMEOUT = 30000 // 30 seconds
 const MAX_RETRIES = 3
 const RETRY_DELAY = 1000 // 1 second
@@ -79,7 +80,7 @@ const defaultRetryConfig: RetryConfig = {
 
 // Create axios instance with default configuration
 const apiClient: AxiosInstance = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: USE_MOCK_API ? '/api' : API_BASE_URL,
     timeout: REQUEST_TIMEOUT,
     headers: {
         'Content-Type': 'application/json',
