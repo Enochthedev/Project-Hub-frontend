@@ -22,19 +22,19 @@ This directory contains comprehensive tests for the Project Repository & Search 
 
 ### All Tests
 
-```bash
+\`\`\`bash
 npm run test:all
-```
+\`\`\`
 
 ### Integration Tests Only
 
-```bash
+\`\`\`bash
 npm run test:integration
-```
+\`\`\`
 
 ### Individual Test Suites
 
-```bash
+\`\`\`bash
 # Project search and browsing tests
 npm run test:e2e:projects
 
@@ -46,13 +46,13 @@ npm run test:e2e:admin
 
 # Complete workflow tests
 npm run test:e2e:workflows
-```
+\`\`\`
 
 ### Performance Tests
 
-```bash
+\`\`\`bash
 npm run test:performance
-```
+\`\`\`
 
 ## Test Environment Setup
 
@@ -60,7 +60,7 @@ npm run test:performance
 
 Create a `.env.test` file with test database configuration:
 
-```env
+\`\`\`env
 NODE_ENV=test
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
@@ -69,13 +69,13 @@ DATABASE_PASSWORD=test_password
 DATABASE_NAME=fyp_platform_test
 JWT_SECRET=test_jwt_secret_key_for_testing_only
 JWT_EXPIRES_IN=1h
-```
+\`\`\`
 
 ### Performance Test Environment
 
 Create a `.env.performance` file for performance testing:
 
-```env
+\`\`\`env
 NODE_ENV=performance
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
@@ -84,13 +84,13 @@ DATABASE_PASSWORD=perf_password
 DATABASE_NAME=fyp_platform_performance
 JWT_SECRET=performance_jwt_secret_key
 JWT_EXPIRES_IN=1h
-```
+\`\`\`
 
 ### Database Setup
 
 Ensure you have separate test databases:
 
-```sql
+\`\`\`sql
 -- Test database
 CREATE DATABASE fyp_platform_test;
 CREATE USER test_user WITH PASSWORD 'test_password';
@@ -100,7 +100,7 @@ GRANT ALL PRIVILEGES ON DATABASE fyp_platform_test TO test_user;
 CREATE DATABASE fyp_platform_performance;
 CREATE USER perf_user WITH PASSWORD 'perf_password';
 GRANT ALL PRIVILEGES ON DATABASE fyp_platform_performance TO perf_user;
-```
+\`\`\`
 
 ## Test Coverage
 
@@ -344,15 +344,15 @@ Tests include performance assertions to catch regressions:
 
 Run tests with additional logging:
 
-```bash
+\`\`\`bash
 DEBUG=* npm run test:e2e
-```
+\`\`\`
 
 ### Selective Test Execution
 
 Run specific test files or patterns:
 
-```bash
+\`\`\`bash
 npx jest --testPathPattern=projects --verbose
 npx jest --testNamePattern="should handle basic search"
-```
+\`\`\`

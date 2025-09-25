@@ -84,9 +84,9 @@ You can customize recommendations using these parameters:
 
 #### Limit Results
 
-```
+\`\`\`
 GET /recommendations?limit=5
-```
+\`\`\`
 
 - **Range**: 1-20 recommendations
 - **Default**: 10 recommendations
@@ -94,10 +94,10 @@ GET /recommendations?limit=5
 
 #### Filter by Specialization
 
-```
+\`\`\`
 GET /recommendations?includeSpecializations=AI,WebDev
 GET /recommendations?excludeSpecializations=Hardware
-```
+\`\`\`
 
 - **Include**: Only show specific specializations
 - **Exclude**: Hide certain specializations
@@ -105,9 +105,9 @@ GET /recommendations?excludeSpecializations=Hardware
 
 #### Set Difficulty Level
 
-```
+\`\`\`
 GET /recommendations?maxDifficulty=intermediate
-```
+\`\`\`
 
 - **Levels**: beginner, intermediate, advanced, expert
 - **Default**: No limit (all levels)
@@ -115,9 +115,9 @@ GET /recommendations?maxDifficulty=intermediate
 
 #### Minimum Quality Threshold
 
-```
+\`\`\`
 GET /recommendations?minSimilarityScore=0.7
-```
+\`\`\`
 
 - **Range**: 0.0-1.0 (0-100%)
 - **Default**: 0.3 (30%)
@@ -125,9 +125,9 @@ GET /recommendations?minSimilarityScore=0.7
 
 #### Diversity Control
 
-```
+\`\`\`
 GET /recommendations?includeDiversityBoost=false
-```
+\`\`\`
 
 - **Default**: true (includes diverse specializations)
 - **False**: Focus on best matches only
@@ -189,33 +189,33 @@ GET /recommendations?includeDiversityBoost=false
 
 #### Like/Dislike
 
-```json
+\`\`\`json
 {
   "projectId": "project-uuid",
   "feedbackType": "like",
   "comment": "Great match for my interests in AI and healthcare"
 }
-```
+\`\`\`
 
 #### Rating (1-5 stars)
 
-```json
+\`\`\`json
 {
   "projectId": "project-uuid",
   "feedbackType": "rating",
   "rating": 4.5,
   "comment": "Good project but technology stack is challenging"
 }
-```
+\`\`\`
 
 #### Bookmark
 
-```json
+\`\`\`json
 {
   "projectId": "project-uuid",
   "feedbackType": "bookmark"
 }
-```
+\`\`\`
 
 **Why Provide Feedback**:
 
@@ -239,9 +239,9 @@ GET /recommendations?includeDiversityBoost=false
 
 **Monitoring Progress**:
 
-```
+\`\`\`
 GET /recommendations/progress/{requestId}
-```
+\`\`\`
 
 **Response Includes**:
 

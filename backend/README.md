@@ -14,23 +14,23 @@ Authentication and User Management service for the Final Year Project Selection 
 
 1. Install dependencies:
 
-```bash
+\`\`\`bash
 npm install
-```
+\`\`\`
 
 2. Copy environment variables:
 
-```bash
+\`\`\`bash
 cp .env.example .env
-```
+\`\`\`
 
 3. Update the `.env` file with your database credentials and other configuration values.
 
 4. Start the development server:
 
-```bash
+\`\`\`bash
 npm run start:dev
-```
+\`\`\`
 
 The server will start on `http://localhost:3001` by default.
 
@@ -78,13 +78,13 @@ Once the server is running, API documentation will be available at:
 
 Check if the service is running:
 
-```bash
+\`\`\`bash
 curl http://localhost:3001/health
-```
+\`\`\`
 
 ## Project Structure
 
-```
+\`\`\`
 src/
 ├── auth/           # Authentication module
 ├── users/          # User management module
@@ -93,4 +93,4 @@ src/
 ├── entities/       # Database entities
 ├── dto/           # Data Transfer Objects
 └── migrations/    # Database migrations
-```
+\`\`\`

@@ -36,6 +36,7 @@ export const metadata: Metadata = {
     "msapplication-TileColor": "#1B998B",
     "msapplication-config": "/browserconfig.xml",
   },
+    generator: 'v0.app'
 }
 
 export const viewport: Viewport = {

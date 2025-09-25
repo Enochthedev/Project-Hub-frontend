@@ -19,7 +19,7 @@ export function useMobile() {
     isDesktop: boolean
     isDesktopLarge: boolean
     isTouch: boolean
-    orientation: 'portrait' | 'landscape'
+    orientation: "portrait" | "landscape"
   }>({
     width: 0,
     height: 0,
@@ -29,14 +29,14 @@ export function useMobile() {
     isDesktop: false,
     isDesktopLarge: false,
     isTouch: false,
-    orientation: 'portrait',
+    orientation: "portrait",
   })
 
   useEffect(() => {
     const checkScreenSize = () => {
       const width = window.innerWidth
       const height = window.innerHeight
-      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+      const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0
 
       setScreenSize({
         width,
@@ -47,7 +47,7 @@ export function useMobile() {
         isDesktop: width >= TABLET_BREAKPOINT && width < DESKTOP_LARGE_BREAKPOINT,
         isDesktopLarge: width >= DESKTOP_LARGE_BREAKPOINT,
         isTouch,
-        orientation: width > height ? 'landscape' : 'portrait',
+        orientation: width > height ? "landscape" : "portrait",
       })
     }
 
@@ -70,20 +70,26 @@ export function useMobile() {
     isMobile: screenSize.isMobile,
     isTablet: screenSize.isTablet,
     isDesktop: screenSize.isDesktop || screenSize.isDesktopLarge,
-    
+
     // Enhanced breakpoints
     isMobileSmall: screenSize.isMobileSmall,
     isDesktopLarge: screenSize.isDesktopLarge,
-    
+
     // Additional properties
     isTouch: screenSize.isTouch,
     orientation: screenSize.orientation,
     screenWidth: screenSize.width,
     screenHeight: screenSize.height,
-    
+
     // Utility functions
-    isLandscape: screenSize.orientation === 'landscape',
-    isPortrait: screenSize.orientation === 'portrait',
+    isLandscape: screenSize.orientation === "landscape",
+    isPortrait: screenSize.orientation === "portrait",
     isMobileDevice: screenSize.isMobile || screenSize.isTouch,
   }
+}
+
+// Legacy hook for backward compatibility
+export function useIsMobile(): boolean {
+  const { isMobile } = useMobile()
+  return isMobile
 }

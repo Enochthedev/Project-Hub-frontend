@@ -15,7 +15,7 @@ The testing infrastructure provides:
 
 ### Basic Data Seeding
 
-```bash
+\`\`\`bash
 # Seed all data (users, projects, bookmarks, views)
 npm run seed
 
@@ -27,11 +27,11 @@ npm run seed:rollback
 
 # Clean up only project data
 npm run seed:cleanup
-```
+\`\`\`
 
 ### Performance Test Data
 
-```bash
+\`\`\`bash
 # Generate small dataset (100 projects, 50 users)
 npm run test:data:small
 
@@ -49,11 +49,11 @@ npm run test:data:cleanup
 
 # Show database statistics
 npm run test:data:stats
-```
+\`\`\`
 
 ### Performance Testing
 
-```bash
+\`\`\`bash
 # Run minimal performance test
 npm run test:perf:minimal
 
@@ -65,11 +65,11 @@ npm run test:perf:stress
 
 # Run comprehensive benchmark
 npm run test:perf:benchmark
-```
+\`\`\`
 
 ## Directory Structure
 
-```
+\`\`\`
 src/test/
 ├── fixtures/           # Test data fixtures
 │   ├── auth.fixtures.ts       # Authentication-related test data
@@ -85,13 +85,13 @@ src/test/
 │   └── performance-test.script.ts  # Performance test runner
 ├── integration/        # Integration test examples
 └── examples/          # Test examples and templates
-```
+\`\`\`
 
 ## Fixtures Usage
 
 ### Project Fixtures
 
-```typescript
+\`\`\`typescript
 import { ProjectFixtures } from '../fixtures';
 
 // Create test project data
@@ -108,11 +108,11 @@ const searchDto = ProjectFixtures.createValidSearchProjectsDto({
 
 // Generate bulk test data
 const projects = ProjectFixtures.createMultipleProjects(100);
-```
+\`\`\`
 
 ### User Fixtures
 
-```typescript
+\`\`\`typescript
 import { UserFixtures } from '../fixtures';
 
 // Create test users
@@ -122,13 +122,13 @@ const supervisor = await UserFixtures.createTestSupervisor();
 // Create bulk users for performance testing
 const students = await UserFixtures.createMultipleStudents(50);
 const supervisors = await UserFixtures.createMultipleSupervisors(10);
-```
+\`\`\`
 
 ## Test Data Utility
 
 The `TestDataUtil` class provides comprehensive database management:
 
-```typescript
+\`\`\`typescript
 import { TestDataUtil } from '../utils';
 
 // Initialize with repositories
@@ -154,7 +154,7 @@ await testDataUtil.seedPerformanceTestData({
   viewsPerProject: 50,
   bookmarksPerUser: 10,
 });
-```
+\`\`\`
 
 ## Performance Testing
 
@@ -180,7 +180,7 @@ The benchmark suite measures:
 
 ### Example Performance Test
 
-```typescript
+\`\`\`typescript
 // Run benchmark with different dataset sizes
 const testCases = [
   { projectCount: 50, userCount: 20, name: 'Small' },
@@ -199,13 +199,13 @@ for (const testCase of testCases) {
     `${testCase.name}: ${endTime - startTime}ms, ${stats.projects} projects`,
   );
 }
-```
+\`\`\`
 
 ## Integration with Tests
 
 ### Unit Tests
 
-```typescript
+\`\`\`typescript
 import { ProjectFixtures } from '../fixtures';
 
 describe('ProjectService', () => {
@@ -219,11 +219,11 @@ describe('ProjectService', () => {
     expect(result.title).toBe(projectData.title);
   });
 });
-```
+\`\`\`
 
 ### Integration Tests
 
-```typescript
+\`\`\`typescript
 import { TestDataUtil } from '../utils';
 
 describe('Project API', () => {
@@ -248,7 +248,7 @@ describe('Project API', () => {
     expect(response.body.projects).toBeDefined();
   });
 });
-```
+\`\`\`
 
 ## Environment Configuration
 
@@ -256,25 +256,25 @@ describe('Project API', () => {
 
 Create a separate test database configuration in `.env.test`:
 
-```env
+\`\`\`env
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_USERNAME=test_user
 DATABASE_PASSWORD=test_password
 DATABASE_NAME=fyp_test
-```
+\`\`\`
 
 ### Performance Testing
 
 For performance testing, use `.env.performance`:
 
-```env
+\`\`\`env
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_USERNAME=perf_user
 DATABASE_PASSWORD=perf_password
 DATABASE_NAME=fyp_performance
-```
+\`\`\`
 
 ## Best Practices
 
