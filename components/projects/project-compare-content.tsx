@@ -1,209 +1,237 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Download, Share2, BookmarkPlus } from "lucide-react"
-import { useProjectsStore } from "@/lib/stores/projects-store"
+import { Share2, Download, Bookmark } from "lucide-react"
+
+interface Project {
+  id: string
+  title: string
+  description: string
+  difficulty: string
+  duration: string
+  technologies: string[]
+  category: string
+  supervisor: string
+  requirements: string[]
+  outcomes: string[]
+}
+
+const mockProjects: Project[] = [
+  {
+    id: "1",
+    title: "AI-Powered Chatbot",
+    description: "Build an intelligent chatbot using natural language processing",
+    difficulty: "Advanced",
+    duration: "12 weeks",
+    technologies: ["Python", "TensorFlow", "React", "Node.js"],
+    category: "Artificial Intelligence",
+    supervisor: "Dr. Sarah Johnson",
+    requirements: ["Python programming", "Machine learning basics", "Web development"],
+    outcomes: ["Working chatbot application", "Research paper", "Presentation"],
+  },
+  {
+    id: "2",
+    title: "E-commerce Platform",
+    description: "Develop a full-stack e-commerce solution with payment integration",
+    difficulty: "Intermediate",
+    duration: "10 weeks",
+    technologies: ["React", "Node.js", "MongoDB", "Stripe"],
+    category: "Web Development",
+    supervisor: "Prof. Michael Chen",
+    requirements: ["JavaScript proficiency", "Database knowledge", "API integration"],
+    outcomes: ["Complete e-commerce site", "Technical documentation", "Demo presentation"],
+  },
+]
 
 interface ProjectCompareContentProps {
   searchParams: { [key: string]: string | string[] | undefined }
 }
 
-export default function ProjectCompareContent({ searchParams }: ProjectCompareContentProps) {
-  const searchParamsHook = useSearchParams()
-  const { projects, fetchProjects } = useProjectsStore()
-  const [selectedProjects, setSelectedProjects] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+export function ProjectCompareContent({ searchParams }: ProjectCompareContentProps) {
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        await fetchProjects()
+    // Get project IDs from search params
+    const projectIds = Array.isArray(searchParams.projects)
+      ? searchParams.projects
+      : searchParams.projects?.split(",") || []
 
-        // Get project IDs from search params
-        const projectIds = searchParamsHook.get("projects")?.split(",") || []
-        setSelectedProjects(projectIds.slice(0, 2)) // Limit to 2 projects
-      } catch (error) {
-        console.error("Failed to load projects:", error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+    // Filter mock projects based on IDs
+    const selectedProjects = mockProjects.filter((project) => projectIds.includes(project.id))
 
-    loadProjects()
-  }, [fetchProjects, searchParamsHook])
+    setProjects(selectedProjects)
+    setLoading(false)
+  }, [searchParams])
 
-  const handleProjectSelect = (projectId: string, index: number) => {
-    const newSelected = [...selectedProjects]
-    newSelected[index] = projectId
-    setSelectedProjects(newSelected)
+  const handleExport = () => {
+    // Export comparison as PDF or CSV
+    console.log("Exporting comparison...")
   }
 
-  const getProjectById = (id: string) => {
-    return projects.find((p) => p.id === id)
+  const handleShare = () => {
+    // Share comparison link
+    navigator.clipboard.writeText(window.location.href)
   }
 
-  const selectedProjectData = selectedProjects.map((id) => getProjectById(id)).filter(Boolean)
+  const handleSave = () => {
+    // Save comparison to user's saved comparisons
+    console.log("Saving comparison...")
+  }
 
-  const comparisonFields = [
-    { key: "title", label: "Project Title" },
-    { key: "description", label: "Description" },
-    { key: "category", label: "Category" },
-    { key: "difficulty", label: "Difficulty Level" },
-    { key: "duration", label: "Estimated Duration" },
-    { key: "technologies", label: "Technologies" },
-    { key: "prerequisites", label: "Prerequisites" },
-    { key: "learningOutcomes", label: "Learning Outcomes" },
-  ]
-
-  if (isLoading) {
+  if (loading) {
     return <div>Loading...</div>
   }
 
-  return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#534D56] dark:text-[#F8F1FF] mb-2">Compare Projects</h1>
-        <p className="text-[#656176] dark:text-[#DECDF5]">
-          Compare up to 2 projects side by side to help you make the best choice
-        </p>
-      </div>
-
-      {/* Project Selection */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-[#534D56] dark:text-[#F8F1FF]">Select Projects to Compare</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[0, 1].map((index) => (
-            <Card key={index}>
-              <CardHeader>
-                <CardTitle className="text-lg">Project {index + 1}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Select
-                  value={selectedProjects[index] || ""}
-                  onValueChange={(value) => handleProjectSelect(value, index)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects
-                      .filter((p) => !selectedProjects.includes(p.id) || p.id === selectedProjects[index])
-                      .map((project) => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.title}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-          ))}
+  if (projects.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">No Projects Selected</h1>
+          <p className="text-gray-600 mb-4">Please select projects to compare from the projects page.</p>
+          <Button onClick={() => window.history.back()}>Go Back</Button>
         </div>
       </div>
+    )
+  }
 
-      {/* Comparison Table */}
-      {selectedProjectData.length >= 2 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Project Comparison</span>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
-                <Button variant="outline" size="sm">
-                  <BookmarkPlus className="h-4 w-4 mr-2" />
-                  Save
-                </Button>
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-semibold">Feature</th>
-                    {selectedProjectData.map((project, index) => (
-                      <th key={index} className="text-left py-3 px-4 font-semibold">
-                        {project?.title}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {comparisonFields.map((field) => (
-                    <tr key={field.key} className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-medium text-[#534D56] dark:text-[#F8F1FF]">{field.label}</td>
-                      {selectedProjectData.map((project, index) => (
-                        <td key={index} className="py-3 px-4 text-[#656176] dark:text-[#DECDF5]">
-                          {field.key === "technologies" && project?.technologies ? (
-                            <div className="flex flex-wrap gap-1">
-                              {project.technologies.slice(0, 3).map((tech, i) => (
-                                <Badge key={i} variant="secondary" className="text-xs">
-                                  {tech}
-                                </Badge>
-                              ))}
-                              {project.technologies.length > 3 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{project.technologies.length - 3}
-                                </Badge>
-                              )}
-                            </div>
-                          ) : field.key === "difficulty" ? (
-                            <Badge
-                              variant={
-                                project?.difficulty === "Beginner"
-                                  ? "secondary"
-                                  : project?.difficulty === "Intermediate"
-                                    ? "default"
-                                    : "destructive"
-                              }
-                            >
-                              {project?.difficulty || "N/A"}
-                            </Badge>
-                          ) : field.key === "description" ? (
-                            <div className="max-w-xs">
-                              <p className="text-sm line-clamp-3">
-                                {(project?.[field.key as keyof typeof project] as string) || "N/A"}
-                              </p>
-                            </div>
-                          ) : (
-                            <span className="text-sm">
-                              {(project?.[field.key as keyof typeof project] as string) || "N/A"}
-                            </span>
-                          )}
-                        </td>
-                      ))}
-                    </tr>
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Project Comparison</h1>
+        <p className="text-gray-600">Compare {projects.length} selected projects side by side</p>
+      </div>
+
+      <div className="flex gap-4 mb-6">
+        <Button onClick={handleExport} variant="outline">
+          <Download className="w-4 h-4 mr-2" />
+          Export
+        </Button>
+        <Button onClick={handleShare} variant="outline">
+          <Share2 className="w-4 h-4 mr-2" />
+          Share
+        </Button>
+        <Button onClick={handleSave} variant="outline">
+          <Bookmark className="w-4 h-4 mr-2" />
+          Save
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Project Comparison</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-4 font-medium">Criteria</th>
+                  {projects.map((project) => (
+                    <th key={project.id} className="text-center p-4 min-w-[250px]">
+                      <div className="space-y-2">
+                        <h3 className="font-semibold text-lg">{project.title}</h3>
+                        <Badge variant="secondary">{project.category}</Badge>
+                      </div>
+                    </th>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {selectedProjectData.length < 2 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-[#656176] dark:text-[#DECDF5] mb-4">Select 2 projects to start comparing</p>
-            <p className="text-sm text-[#656176] dark:text-[#DECDF5]">
-              Choose projects from the dropdowns above to see a detailed side-by-side comparison
-            </p>
-          </CardContent>
-        </Card>
-      )}
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b">
+                  <td className="p-4 font-medium">Description</td>
+                  {projects.map((project) => (
+                    <td key={project.id} className="p-4 text-center">
+                      <p className="text-sm text-gray-600">{project.description}</p>
+                    </td>
+                  ))}
+                </tr>
+                <tr className="border-b">
+                  <td className="p-4 font-medium">Difficulty</td>
+                  {projects.map((project) => (
+                    <td key={project.id} className="p-4 text-center">
+                      <Badge
+                        variant={
+                          project.difficulty === "Advanced"
+                            ? "destructive"
+                            : project.difficulty === "Intermediate"
+                              ? "default"
+                              : "secondary"
+                        }
+                      >
+                        {project.difficulty}
+                      </Badge>
+                    </td>
+                  ))}
+                </tr>
+                <tr className="border-b">
+                  <td className="p-4 font-medium">Duration</td>
+                  {projects.map((project) => (
+                    <td key={project.id} className="p-4 text-center">
+                      {project.duration}
+                    </td>
+                  ))}
+                </tr>
+                <tr className="border-b">
+                  <td className="p-4 font-medium">Technologies</td>
+                  {projects.map((project) => (
+                    <td key={project.id} className="p-4">
+                      <div className="flex flex-wrap gap-1 justify-center">
+                        {project.technologies.map((tech) => (
+                          <Badge key={tech} variant="outline" className="text-xs">
+                            {tech}
+                          </Badge>
+                        ))}
+                      </div>
+                    </td>
+                  ))}
+                </tr>
+                <tr className="border-b">
+                  <td className="p-4 font-medium">Supervisor</td>
+                  {projects.map((project) => (
+                    <td key={project.id} className="p-4 text-center">
+                      {project.supervisor}
+                    </td>
+                  ))}
+                </tr>
+                <tr className="border-b">
+                  <td className="p-4 font-medium">Requirements</td>
+                  {projects.map((project) => (
+                    <td key={project.id} className="p-4">
+                      <ul className="text-sm text-left space-y-1">
+                        {project.requirements.map((req, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="w-1 h-1 bg-gray-400 rounded-full mt-2 mr-2 flex-shrink-0" />
+                            {req}
+                          </li>
+                        ))}
+                      </ul>
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <td className="p-4 font-medium">Expected Outcomes</td>
+                  {projects.map((project) => (
+                    <td key={project.id} className="p-4">
+                      <ul className="text-sm text-left space-y-1">
+                        {project.outcomes.map((outcome, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="w-1 h-1 bg-gray-400 rounded-full mt-2 mr-2 flex-shrink-0" />
+                            {outcome}
+                          </li>
+                        ))}
+                      </ul>
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

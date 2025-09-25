@@ -3,68 +3,60 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 export default function ProjectCompareLoading() {
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <Skeleton className="h-8 w-64 mb-2" />
         <Skeleton className="h-4 w-96" />
       </div>
 
-      {/* Project Selection */}
-      <div className="mb-8">
-        <Skeleton className="h-6 w-48 mb-4" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-10 w-full" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-10 w-full" />
-            </CardContent>
-          </Card>
-        </div>
+      {/* Action buttons */}
+      <div className="flex gap-4 mb-6">
+        <Skeleton className="h-10 w-24" />
+        <Skeleton className="h-10 w-24" />
+        <Skeleton className="h-10 w-24" />
       </div>
 
-      {/* Comparison Table */}
+      {/* Comparison table */}
       <Card>
         <CardHeader>
           <Skeleton className="h-6 w-48" />
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {/* Table Header */}
-            <div className="grid grid-cols-3 gap-4 pb-4 border-b">
-              <Skeleton className="h-5 w-20" />
-              <Skeleton className="h-5 w-32" />
-              <Skeleton className="h-5 w-32" />
-            </div>
-
-            {/* Table Rows */}
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="grid grid-cols-3 gap-4 py-3 border-b border-gray-100">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-4">
+                    <Skeleton className="h-4 w-20" />
+                  </th>
+                  <th className="text-center p-4">
+                    <Skeleton className="h-20 w-32 mx-auto" />
+                  </th>
+                  <th className="text-center p-4">
+                    <Skeleton className="h-20 w-32 mx-auto" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <tr key={i} className="border-b">
+                    <td className="p-4">
+                      <Skeleton className="h-4 w-24" />
+                    </td>
+                    <td className="p-4 text-center">
+                      <Skeleton className="h-4 w-32 mx-auto" />
+                    </td>
+                    <td className="p-4 text-center">
+                      <Skeleton className="h-4 w-32 mx-auto" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
-
-      {/* Action Buttons */}
-      <div className="mt-8 flex gap-4">
-        <Skeleton className="h-10 w-32" />
-        <Skeleton className="h-10 w-28" />
-        <Skeleton className="h-10 w-24" />
-      </div>
     </div>
   )
 }

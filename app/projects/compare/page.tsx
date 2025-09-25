@@ -1,12 +1,12 @@
 import { Suspense } from "react"
-import ProjectCompareContent from "@/components/projects/project-compare-content"
+import { ProjectCompareContent } from "@/components/projects/project-compare-content"
 import ProjectCompareLoading from "./loading"
 
-interface ProjectComparePageProps {
+export default async function ProjectComparePage({
+  searchParams,
+}: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}
-
-export default async function ProjectComparePage({ searchParams }: ProjectComparePageProps) {
+}) {
   const params = await searchParams
 
   return (
