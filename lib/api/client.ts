@@ -8,6 +8,17 @@ const REQUEST_TIMEOUT = 30000 // 30 seconds
 const MAX_RETRIES = 3
 const RETRY_DELAY = 1000 // 1 second
 
+// API Response interface
+export interface ApiResponse<T = any> {
+  success: boolean
+  message: string
+  data?: T
+  error?: string
+  errorCode?: string
+  timestamp?: string
+  path?: string
+}
+
 // Cache configuration
 interface CacheEntry {
   data: any
@@ -79,200 +90,138 @@ export class TimeoutError extends Error {
   }
 }
 
-// API Client configuration
-interface APIClientConfig {
-  baseURL?: string
-  timeout?: number
-  retries?: number
-  retryDelay?: number
-}
-
-interface RequestOptions extends AxiosRequestConfig {
+// Enhanced request configuration
+export interface EnhancedRequestConfig extends AxiosRequestConfig {
   useCache?: boolean
   cacheTTL?: number
   skipAuth?: boolean
 }
 
-class APIClient {
-  private axiosInstance: AxiosInstance
-  private cache = new ApiCache()
-  private config: APIClientConfig
-  private useMockAPI: boolean
+// Create axios instance with default configuration
+const apiClient: AxiosInstance = axios.create({
+  baseURL: USE_MOCK_API ? "/api" : API_BASE_URL,
+  timeout: REQUEST_TIMEOUT,
+  headers: {
+    "Content-Type": "application/json",
+  },
+})
 
-  constructor(config: APIClientConfig = {}) {
-    this.config = {
-      baseURL: API_BASE_URL,
-      timeout: REQUEST_TIMEOUT,
-      retries: MAX_RETRIES,
-      retryDelay: RETRY_DELAY,
-      ...config,
+// Request interceptor to add auth token and handle caching
+apiClient.interceptors.request.use(
+  (config) => {
+    // Add request timestamp for debugging
+    config.metadata = { startTime: Date.now() }
+
+    // Get token from localStorage
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("accessToken")
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
     }
 
-    this.useMockAPI = USE_MOCK_API
+    // Add request ID for tracking
+    config.headers["X-Request-ID"] = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-    this.axiosInstance = axios.create({
-      baseURL: this.config.baseURL,
-      timeout: this.config.timeout,
-      headers: {
-        "Content-Type": "application/json",
-      },
+    return config
+  },
+  (error) => {
+    console.error("Request interceptor error:", error)
+    return Promise.reject(error)
+  },
+)
+
+// Response interceptor to handle token refresh, caching, and retries
+apiClient.interceptors.response.use(
+  (response: AxiosResponse) => {
+    // Log response time for debugging
+    const startTime = response.config.metadata?.startTime
+    if (startTime) {
+      const duration = Date.now() - startTime
+      console.log(`API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${duration}ms`)
+    }
+
+    return response
+  },
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any
+
+    // Handle 401 Unauthorized - Token refresh
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+
+      try {
+        // Try to refresh token
+        const refreshToken = localStorage.getItem("refreshToken")
+        if (refreshToken) {
+          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+            refreshToken,
+          })
+
+          const { accessToken, refreshToken: newRefreshToken } = response.data.data.tokens
+
+          // Update tokens in localStorage
+          localStorage.setItem("accessToken", accessToken)
+          localStorage.setItem("refreshToken", newRefreshToken)
+
+          // Retry original request with new token
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`
+          return apiClient(originalRequest)
+        }
+      } catch (refreshError) {
+        // Refresh failed, redirect to login
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("accessToken")
+          localStorage.removeItem("refreshToken")
+          localStorage.removeItem("user")
+
+          // Only redirect if not already on login page
+          if (window.location.pathname !== "/login") {
+            window.location.href = "/login"
+          }
+        }
+        return Promise.reject(refreshError)
+      }
+    }
+
+    console.error("API Error:", {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
     })
 
-    this.setupInterceptors()
+    return Promise.reject(error)
+  },
+)
+
+// Enhanced error handler
+const handleApiError = (error: AxiosError): never => {
+  if (error.code === "ECONNABORTED") {
+    throw new TimeoutError("Request timed out")
   }
 
-  private setupInterceptors() {
-    // Request interceptor to add auth token and handle caching
-    this.axiosInstance.interceptors.request.use(
-      (config) => {
-        // Add request timestamp for debugging
-        config.metadata = { startTime: Date.now() }
-
-        // Add request ID for tracking
-        config.headers["X-Request-ID"] = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
-        // Add auth token if available and not skipped
-        if (!config.skipAuth) {
-          const token = this.getAuthToken()
-          if (token) {
-            config.headers.Authorization = `Bearer ${token}`
-          }
-        }
-
-        return config
-      },
-      (error) => {
-        console.error("Request interceptor error:", error)
-        return Promise.reject(error)
-      },
-    )
-
-    // Response interceptor to handle token refresh, caching, and retries
-    this.axiosInstance.interceptors.response.use(
-      (response: AxiosResponse) => {
-        // Log response time for debugging
-        const startTime = response.config.metadata?.startTime
-        if (startTime) {
-          const duration = Date.now() - startTime
-          console.log(`API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${duration}ms`)
-        }
-
-        // Cache GET requests if they have cache headers or are explicitly cacheable
-        if (response.config.method === "get" && response.status === 200) {
-          const cacheKey = `${response.config.url}?${JSON.stringify(response.config.params || {})}`
-          const cacheControl = response.headers["cache-control"]
-
-          if (cacheControl && cacheControl.includes("max-age")) {
-            const maxAge = Number.parseInt(cacheControl.match(/max-age=(\d+)/)?.[1] || "0") * 1000
-            if (maxAge > 0) {
-              this.cache.set(cacheKey, response.data, maxAge)
-            }
-          }
-        }
-
-        return response
-      },
-      async (error: AxiosError) => {
-        const originalRequest = error.config
-
-        // Handle 401 Unauthorized - Token refresh
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true
-
-          try {
-            // Try to refresh token
-            await this.refreshToken()
-            const token = this.getAuthToken()
-            if (token) {
-              originalRequest.headers.Authorization = `Bearer ${token}`
-              return this.axiosInstance(originalRequest)
-            }
-          } catch (refreshError) {
-            // Refresh failed, redirect to login
-            this.handleAuthError()
-            return Promise.reject(refreshError)
-          }
-        }
-
-        // Log error details
-        console.error("API Error:", {
-          url: error.config?.url,
-          method: error.config?.method,
-          status: error.response?.status,
-          message: error.message,
-          data: error.response?.data,
-        })
-
-        return Promise.reject(this.handleError(error))
-      },
-    )
+  if (!error.response) {
+    throw new NetworkError("Network error - please check your connection")
   }
 
-  private getAuthToken(): string | null {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("accessToken")
-    }
-    return null
-  }
+  const { status, data } = error.response
+  const errorMessage = (data as any)?.message || error.message || "An error occurred"
+  const errorCode = (data as any)?.errorCode || (data as any)?.code
 
-  private async refreshToken() {
-    const refreshToken = typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null
+  throw new ApiError(errorMessage, status, errorCode, data)
+}
 
-    if (!refreshToken) {
-      throw new Error("No refresh token available")
-    }
-
-    const response = await this.axiosInstance.post(
-      "/auth/refresh",
-      {
-        refreshToken,
-      },
-      { skipAuth: true },
-    )
-
-    if (response.data.tokens) {
-      localStorage.setItem("accessToken", response.data.tokens.accessToken)
-      localStorage.setItem("refreshToken", response.data.tokens.refreshToken)
-    }
-  }
-
-  private handleAuthError() {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("accessToken")
-      localStorage.removeItem("refreshToken")
-      localStorage.removeItem("user")
-      window.location.href = "/login"
-    }
-  }
-
-  private handleError(error: any): Error {
-    if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
-      return new TimeoutError("Request timeout")
-    }
-
-    if (!error.response) {
-      return new NetworkError("Network connection failed")
-    }
-
-    const { status, data } = error.response
-    const message = data?.message || error.message || "An error occurred"
-    const code = data?.errorCode || data?.code
-
-    return new ApiError(message, status, code, data)
-  }
-
-  private getCacheKey(url: string, params?: any): string {
-    const paramString = params ? JSON.stringify(params) : ""
-    return `${url}${paramString}`
-  }
-
-  async get<T = any>(url: string, options: RequestOptions = {}): Promise<T> {
-    const { useCache, cacheTTL, ...axiosOptions } = options
+// Generic API methods with enhanced features
+export const api = {
+  get: async <T = any>(url: string, config: EnhancedRequestConfig = {}): Promise<ApiResponse<T>> => {
+    const { useCache = false, cacheTTL, ...axiosConfig } = config
 
     // Check cache first for GET requests
     if (useCache) {
-      const cacheKey = this.getCacheKey(url, axiosOptions.params)
-      const cached = this.cache.get<T>(cacheKey)
+      const cacheKey = `${url}?${JSON.stringify(axiosConfig.params || {})}`
+      const cached = apiCache.get<ApiResponse<T>>(cacheKey)
       if (cached) {
         console.log("Cache hit:", cacheKey)
         return cached
@@ -280,110 +229,146 @@ class APIClient {
     }
 
     try {
-      let response: any
+      let result: ApiResponse<T>
 
-      if (this.useMockAPI) {
-        response = { data: await mockApi.get(url, options) }
+      if (USE_MOCK_API) {
+        result = (await mockApi.get(url, axiosConfig)) as ApiResponse<T>
       } else {
-        response = await this.axiosInstance.get<T>(url, axiosOptions)
+        const response = await apiClient.get(url, axiosConfig)
+        result = response.data
       }
 
-      // Cache the response if requested
-      if (useCache) {
-        const cacheKey = this.getCacheKey(url, axiosOptions.params)
-        this.cache.set(cacheKey, response.data, cacheTTL)
+      // Cache successful GET responses
+      if (useCache && result.success) {
+        const cacheKey = `${url}?${JSON.stringify(axiosConfig.params || {})}`
+        apiCache.set(cacheKey, result, cacheTTL)
       }
 
-      return response.data
+      return result
     } catch (error) {
-      throw this.handleError(error)
+      handleApiError(error as AxiosError)
     }
-  }
+  },
 
-  async post<T = any>(url: string, data?: any, options: RequestOptions = {}): Promise<T> {
+  post: async <T = any>(url: string, data?: any, config: EnhancedRequestConfig = {}): Promise<ApiResponse<T>> => {
     try {
-      let response: any
+      let result: ApiResponse<T>
 
-      if (this.useMockAPI) {
-        response = { data: await mockApi.post(url, data, options) }
+      if (USE_MOCK_API) {
+        result = (await mockApi.post(url, data, config)) as ApiResponse<T>
       } else {
-        response = await this.axiosInstance.post<T>(url, data, options)
+        const response = await apiClient.post(url, data, config)
+        result = response.data
       }
 
-      return response.data
-    } catch (error) {
-      throw this.handleError(error)
-    }
-  }
-
-  async put<T = any>(url: string, data?: any, options: RequestOptions = {}): Promise<T> {
-    try {
-      let response: any
-
-      if (this.useMockAPI) {
-        response = { data: await mockApi.put(url, data, options) }
-      } else {
-        response = await this.axiosInstance.put<T>(url, data, options)
+      // Invalidate related cache entries on successful POST
+      if (result.success) {
+        apiCache.clear()
       }
 
-      return response.data
+      return result
     } catch (error) {
-      throw this.handleError(error)
+      handleApiError(error as AxiosError)
     }
-  }
+  },
 
-  async patch<T = any>(url: string, data?: any, options: RequestOptions = {}): Promise<T> {
+  put: async <T = any>(url: string, data?: any, config: EnhancedRequestConfig = {}): Promise<ApiResponse<T>> => {
     try {
-      let response: any
+      let result: ApiResponse<T>
 
-      if (this.useMockAPI) {
-        response = { data: await mockApi.patch(url, data, options) }
+      if (USE_MOCK_API) {
+        result = (await mockApi.put(url, data, config)) as ApiResponse<T>
       } else {
-        response = await this.axiosInstance.patch<T>(url, data, options)
+        const response = await apiClient.put(url, data, config)
+        result = response.data
       }
 
-      return response.data
-    } catch (error) {
-      throw this.handleError(error)
-    }
-  }
-
-  async delete<T = any>(url: string, options: RequestOptions = {}): Promise<T> {
-    try {
-      let response: any
-
-      if (this.useMockAPI) {
-        response = { data: await mockApi.delete(url, options) }
-      } else {
-        response = await this.axiosInstance.delete<T>(url, options)
+      // Invalidate cache on successful PUT
+      if (result.success) {
+        apiCache.clear()
       }
 
-      return response.data
+      return result
     } catch (error) {
-      throw this.handleError(error)
+      handleApiError(error as AxiosError)
     }
-  }
+  },
 
-  async uploadFile<T = any>(
-    url: string,
-    file: File,
-    onProgress?: (progress: number) => void,
-    options: RequestOptions = {},
-  ): Promise<T> {
-    const formData = new FormData()
-    formData.append("file", file)
-
+  patch: async <T = any>(url: string, data?: any, config: EnhancedRequestConfig = {}): Promise<ApiResponse<T>> => {
     try {
-      let response: any
+      let result: ApiResponse<T>
 
-      if (this.useMockAPI) {
-        response = { data: await mockApi.uploadFile(url, file, onProgress) }
+      if (USE_MOCK_API) {
+        result = (await mockApi.patch(url, data, config)) as ApiResponse<T>
       } else {
-        response = await this.axiosInstance.post<T>(url, formData, {
-          ...options,
+        const response = await apiClient.patch(url, data, config)
+        result = response.data
+      }
+
+      // Invalidate cache on successful PATCH
+      if (result.success) {
+        apiCache.clear()
+      }
+
+      return result
+    } catch (error) {
+      handleApiError(error as AxiosError)
+    }
+  },
+
+  delete: async <T = any>(url: string, config: EnhancedRequestConfig = {}): Promise<ApiResponse<T>> => {
+    try {
+      let result: ApiResponse<T>
+
+      if (USE_MOCK_API) {
+        result = (await mockApi.delete(url, config)) as ApiResponse<T>
+      } else {
+        const response = await apiClient.delete(url, config)
+        result = response.data
+      }
+
+      // Invalidate cache on successful DELETE
+      if (result.success) {
+        apiCache.clear()
+      }
+
+      return result
+    } catch (error) {
+      handleApiError(error as AxiosError)
+    }
+  },
+
+  // Utility methods
+  clearCache: () => apiCache.clear(),
+
+  getCacheStats: () => apiCache.getStats(),
+
+  // Health check endpoint
+  healthCheck: async (): Promise<boolean> => {
+    try {
+      if (USE_MOCK_API) {
+        return await mockApi.healthCheck()
+      } else {
+        await apiClient.get("/health")
+        return true
+      }
+    } catch {
+      return false
+    }
+  },
+
+  // Upload file with progress
+  uploadFile: async (url: string, file: File, onProgress?: (progress: number) => void): Promise<ApiResponse<any>> => {
+    try {
+      if (USE_MOCK_API) {
+        return await mockApi.uploadFile(url, file, onProgress)
+      } else {
+        const formData = new FormData()
+        formData.append("file", file)
+
+        const response = await apiClient.post(url, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
-            ...options.headers,
           },
           onUploadProgress: (progressEvent) => {
             if (onProgress && progressEvent.total) {
@@ -392,36 +377,15 @@ class APIClient {
             }
           },
         })
-      }
 
-      return response.data
+        return response.data
+      }
     } catch (error) {
-      throw this.handleError(error)
+      handleApiError(error as AxiosError)
     }
-  }
-
-  // Utility methods
-  clearCache(): void {
-    this.cache.clear()
-  }
-
-  getCacheStats(): { size: number; keys: string[] } {
-    return this.cache.getStats()
-  }
-
-  async healthCheck(): Promise<boolean> {
-    try {
-      if (this.useMockAPI) {
-        return await mockApi.healthCheck()
-      } else {
-        await this.axiosInstance.get("/health")
-        return true
-      }
-    } catch {
-      return false
-    }
-  }
+  },
 }
 
-// Export singleton instance
-export const api = new APIClient()
+// Export the enhanced API client and cache
+export { apiCache }
+export default apiClient
