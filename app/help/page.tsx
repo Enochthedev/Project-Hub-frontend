@@ -1,40 +1,52 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toast } from "sonner"
 import {
   Search,
   BookOpen,
-  MessageCircle,
-  Phone,
-  Mail,
   Video,
+  MessageCircle,
+  Mail,
+  Phone,
   HelpCircle,
-  ThumbsUp,
-  ThumbsDown,
-  ExternalLink,
-  Clock,
-  Users,
-  Star,
+  FileText,
   Play,
+  Send,
+  Clock,
+  Star,
+  ThumbsUp,
+  ExternalLink,
+  Download,
 } from "lucide-react"
 
-interface HelpArticle {
+interface Article {
   id: string
   title: string
-  content: string
+  description: string
   category: string
-  tags: string[]
-  helpful: number
-  notHelpful: number
-  lastUpdated: string
+  readTime: number
+  rating: number
+  isPopular: boolean
+  content: string
 }
 
 interface FAQ {
@@ -43,10 +55,9 @@ interface FAQ {
   answer: string
   category: string
   helpful: number
-  notHelpful: number
 }
 
-interface VideoTutorial {
+interface VideoType {
   id: string
   title: string
   description: string
@@ -54,310 +65,398 @@ interface VideoTutorial {
   thumbnail: string
   category: string
   views: number
-  rating: number
 }
 
+const mockArticles: Article[] = [
+  {
+    id: "1",
+    title: "Getting Started with Project Hub",
+    description: "A comprehensive guide to setting up your account and creating your first project.",
+    category: "Getting Started",
+    readTime: 5,
+    rating: 4.8,
+    isPopular: true,
+    content: "This article covers the basics of getting started with Project Hub...",
+  },
+  {
+    id: "2",
+    title: "Managing Project Milestones",
+    description: "Learn how to create, track, and manage project milestones effectively.",
+    category: "Project Management",
+    readTime: 8,
+    rating: 4.6,
+    isPopular: true,
+    content: "Project milestones are crucial for tracking progress...",
+  },
+  {
+    id: "3",
+    title: "Collaborating with Supervisors",
+    description: "Best practices for effective communication and collaboration with your project supervisor.",
+    category: "Collaboration",
+    readTime: 6,
+    rating: 4.7,
+    isPopular: false,
+    content: "Effective collaboration with supervisors is key to project success...",
+  },
+]
+
+const mockFAQs: FAQ[] = [
+  {
+    id: "1",
+    question: "How do I create a new project?",
+    answer:
+      'To create a new project, navigate to the Projects section and click the "New Project" button. Fill in the required information including title, description, and select your supervisor.',
+    category: "Projects",
+    helpful: 45,
+  },
+  {
+    id: "2",
+    question: "Can I change my supervisor after project approval?",
+    answer:
+      "Yes, you can request a supervisor change through the project settings. However, this requires approval from both the current and new supervisor, as well as admin approval.",
+    category: "Supervision",
+    helpful: 32,
+  },
+  {
+    id: "3",
+    question: "How do I submit my final project?",
+    answer:
+      'Final project submission is done through the project dashboard. Upload all required files, complete the submission checklist, and click "Submit for Review".',
+    category: "Submission",
+    helpful: 67,
+  },
+  {
+    id: "4",
+    question: "What file formats are supported for uploads?",
+    answer:
+      "We support most common file formats including PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, ZIP, and various image formats (JPG, PNG, GIF).",
+    category: "Technical",
+    helpful: 28,
+  },
+]
+
+const mockVideos: VideoType[] = [
+  {
+    id: "1",
+    title: "Project Hub Overview",
+    description: "A complete walkthrough of the Project Hub platform and its features.",
+    duration: "12:34",
+    thumbnail: "/placeholder.jpg",
+    category: "Overview",
+    views: 1250,
+  },
+  {
+    id: "2",
+    title: "Creating Your First Project",
+    description: "Step-by-step tutorial on creating and setting up your first project.",
+    duration: "8:45",
+    thumbnail: "/placeholder.jpg",
+    category: "Getting Started",
+    views: 890,
+  },
+  {
+    id: "3",
+    title: "Advanced Milestone Management",
+    description: "Learn advanced techniques for managing complex project milestones.",
+    duration: "15:20",
+    thumbnail: "/placeholder.jpg",
+    category: "Advanced",
+    views: 567,
+  },
+]
+
 export default function HelpPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [activeTab, setActiveTab] = useState("articles")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("all")
+  const [contactForm, setContactForm] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    category: "",
+    message: "",
+  })
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false)
 
-  // Mock data
-  const helpArticles: HelpArticle[] = [
-    {
-      id: "1",
-      title: "Getting Started with Project Hub",
-      content: "Learn how to navigate the platform, create your profile, and start your first project...",
-      category: "Getting Started",
-      tags: ["basics", "setup", "profile"],
-      helpful: 45,
-      notHelpful: 3,
-      lastUpdated: "2024-01-15",
-    },
-    {
-      id: "2",
-      title: "How to Submit a Project Proposal",
-      content: "Step-by-step guide on creating and submitting your project proposal for approval...",
-      category: "Projects",
-      tags: ["project", "proposal", "submission"],
-      helpful: 38,
-      notHelpful: 2,
-      lastUpdated: "2024-01-18",
-    },
-    {
-      id: "3",
-      title: "Using the AI Assistant Effectively",
-      content: "Tips and tricks for getting the most out of your AI assistant conversations...",
-      category: "AI Assistant",
-      tags: ["ai", "chat", "tips"],
-      helpful: 52,
-      notHelpful: 1,
-      lastUpdated: "2024-01-20",
-    },
-    {
-      id: "4",
-      title: "Managing Project Milestones",
-      content: "Learn how to create, track, and complete project milestones effectively...",
-      category: "Milestones",
-      tags: ["milestones", "tracking", "progress"],
-      helpful: 29,
-      notHelpful: 4,
-      lastUpdated: "2024-01-12",
-    },
-  ]
+  const categories = ["Getting Started", "Project Management", "Collaboration", "Technical", "Advanced"]
 
-  const faqs: FAQ[] = [
-    {
-      id: "1",
-      question: "How do I reset my password?",
-      answer:
-        'You can reset your password by clicking the "Forgot Password" link on the login page. Enter your email address and follow the instructions sent to your email.',
-      category: "Account",
-      helpful: 67,
-      notHelpful: 2,
-    },
-    {
-      id: "2",
-      question: "Can I change my project supervisor?",
-      answer:
-        "Yes, you can request a supervisor change by contacting the admin team through the support system. Please provide a valid reason for the change request.",
-      category: "Projects",
-      helpful: 34,
-      notHelpful: 8,
-    },
-    {
-      id: "3",
-      question: "How long does project approval take?",
-      answer:
-        "Project approval typically takes 3-5 business days. You will receive a notification once your project has been reviewed and approved or if any changes are needed.",
-      category: "Projects",
-      helpful: 89,
-      notHelpful: 3,
-    },
-    {
-      id: "4",
-      question: "Is my data secure on the platform?",
-      answer:
-        "Yes, we take data security seriously. All data is encrypted in transit and at rest. We follow industry best practices for data protection and privacy.",
-      category: "Security",
-      helpful: 45,
-      notHelpful: 1,
-    },
-    {
-      id: "5",
-      question: "Can I collaborate with other students?",
-      answer:
-        "Yes, the platform supports collaboration features. You can share projects, work on group assignments, and communicate with peers through the messaging system.",
-      category: "Collaboration",
-      helpful: 56,
-      notHelpful: 4,
-    },
-  ]
+  const filteredArticles = mockArticles.filter((article) => {
+    const matchesSearch =
+      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      article.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = selectedCategory === "all" || article.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
 
-  const videoTutorials: VideoTutorial[] = [
-    {
-      id: "1",
-      title: "Platform Overview and Navigation",
-      description: "A comprehensive tour of the Project Hub platform and its main features.",
-      duration: "8:45",
-      thumbnail: "/placeholder.svg?height=120&width=200",
-      category: "Getting Started",
-      views: 1234,
-      rating: 4.8,
-    },
-    {
-      id: "2",
-      title: "Creating Your First Project",
-      description: "Step-by-step walkthrough of creating and submitting your first project proposal.",
-      duration: "12:30",
-      thumbnail: "/placeholder.svg?height=120&width=200",
-      category: "Projects",
-      views: 987,
-      rating: 4.6,
-    },
-    {
-      id: "3",
-      title: "Mastering the AI Assistant",
-      description: "Learn advanced techniques for getting better responses from the AI assistant.",
-      duration: "15:20",
-      thumbnail: "/placeholder.svg?height=120&width=200",
-      category: "AI Assistant",
-      views: 756,
-      rating: 4.9,
-    },
-    {
-      id: "4",
-      title: "Milestone Management Best Practices",
-      description: "Tips for effectively planning and tracking your project milestones.",
-      duration: "10:15",
-      thumbnail: "/placeholder.svg?height=120&width=200",
-      category: "Milestones",
-      views: 543,
-      rating: 4.7,
-    },
-  ]
+  const filteredFAQs = mockFAQs.filter((faq) => {
+    const matchesSearch =
+      faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = selectedCategory === "all" || faq.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
 
-  const filteredArticles = helpArticles.filter(
-    (article) =>
-      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())),
-  )
+  const filteredVideos = mockVideos.filter((video) => {
+    const matchesSearch =
+      video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      video.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = selectedCategory === "all" || video.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
 
-  const filteredFAQs = faqs.filter(
-    (faq) =>
-      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      faq.answer.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  const handleContactSubmit = () => {
+    if (!contactForm.name || !contactForm.email || !contactForm.message) {
+      toast.error("Please fill in all required fields")
+      return
+    }
 
-  const filteredVideos = videoTutorials.filter(
-    (video) =>
-      video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      video.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+    // Simulate form submission
+    toast.success("Your message has been sent! We'll get back to you within 24 hours.")
+    setContactForm({ name: "", email: "", subject: "", category: "", message: "" })
+    setIsContactDialogOpen(false)
+  }
 
   return (
-    <div className="container py-8 space-y-6">
+    <div className="container py-6 space-y-6">
       {/* Header */}
       <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-[#534D56] dark:text-[#F8F1FF] flex items-center justify-center gap-3">
-          <HelpCircle className="h-8 w-8" />
-          Help & Support
-        </h1>
-        <p className="text-[#656176] dark:text-[#DECDF5] max-w-2xl mx-auto">
-          Find answers to your questions, learn how to use the platform, and get support when you need it.
-        </p>
-      </div>
+        <div>
+          <h1 className="text-3xl font-bold text-[#534D56] dark:text-[#F8F1FF]">Help & Support</h1>
+          <p className="text-[#656176] dark:text-[#DECDF5] mt-2">
+            Find answers to your questions and get the help you need
+          </p>
+        </div>
 
-      {/* Search */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="relative max-w-2xl mx-auto">
+        {/* Search */}
+        <div className="max-w-2xl mx-auto">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search for help articles, FAQs, or tutorials..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-12"
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Help Content Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        {/* Quick Actions */}
+        <div className="flex flex-wrap justify-center gap-4">
+          <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#1B998B] hover:bg-[#1B998B]/90">
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Contact Support
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Contact Support</DialogTitle>
+                <DialogDescription>Send us a message and we'll get back to you as soon as possible.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Name *</Label>
+                    <Input
+                      id="name"
+                      value={contactForm.name}
+                      onChange={(e) => setContactForm((prev) => ({ ...prev, name: e.target.value }))}
+                      placeholder="Your name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={contactForm.email}
+                      onChange={(e) => setContactForm((prev) => ({ ...prev, email: e.target.value }))}
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="subject">Subject</Label>
+                  <Input
+                    id="subject"
+                    value={contactForm.subject}
+                    onChange={(e) => setContactForm((prev) => ({ ...prev, subject: e.target.value }))}
+                    placeholder="Brief description of your issue"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={contactForm.category}
+                    onValueChange={(value) => setContactForm((prev) => ({ ...prev, category: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="technical">Technical Issue</SelectItem>
+                      <SelectItem value="account">Account Problem</SelectItem>
+                      <SelectItem value="project">Project Help</SelectItem>
+                      <SelectItem value="billing">Billing Question</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="message">Message *</Label>
+                  <Textarea
+                    id="message"
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm((prev) => ({ ...prev, message: e.target.value }))}
+                    placeholder="Describe your issue or question in detail..."
+                    rows={4}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsContactDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleContactSubmit} className="bg-[#1B998B] hover:bg-[#1B998B]/90">
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Message
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Button variant="outline">
+            <Phone className="h-4 w-4 mr-2" />
+            Call Support
+          </Button>
+          <Button variant="outline">
+            <Mail className="h-4 w-4 mr-2" />
+            Email Us
+          </Button>
+        </div>
+      </div>
+
+      {/* Category Filter */}
+      <div className="flex justify-center">
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category} value={category}>
+                {category}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Content Tabs */}
+      <Tabs defaultValue="articles" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="articles" className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            Articles ({filteredArticles.length})
+          <TabsTrigger value="articles">
+            <BookOpen className="h-4 w-4 mr-2" />
+            Articles
           </TabsTrigger>
-          <TabsTrigger value="faqs" className="flex items-center gap-2">
-            <HelpCircle className="h-4 w-4" />
-            FAQs ({filteredFAQs.length})
+          <TabsTrigger value="faqs">
+            <HelpCircle className="h-4 w-4 mr-2" />
+            FAQs
           </TabsTrigger>
-          <TabsTrigger value="videos" className="flex items-center gap-2">
-            <Video className="h-4 w-4" />
-            Videos ({filteredVideos.length})
+          <TabsTrigger value="videos">
+            <Video className="h-4 w-4 mr-2" />
+            Videos
           </TabsTrigger>
-          <TabsTrigger value="contact" className="flex items-center gap-2">
-            <MessageCircle className="h-4 w-4" />
+          <TabsTrigger value="contact">
+            <MessageCircle className="h-4 w-4 mr-2" />
             Contact
           </TabsTrigger>
         </TabsList>
 
-        {/* Help Articles */}
+        {/* Articles Tab */}
         <TabsContent value="articles" className="space-y-4">
-          <div className="grid gap-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredArticles.map((article) => (
               <Card key={article.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <CardTitle className="text-lg">{article.title}</CardTitle>
-                      <CardDescription>{article.content}</CardDescription>
-                    </div>
+                  <div className="flex items-center justify-between">
                     <Badge variant="secondary">{article.category}</Badge>
+                    {article.isPopular && (
+                      <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                        <Star className="h-3 w-3 mr-1" />
+                        Popular
+                      </Badge>
+                    )}
                   </div>
+                  <CardTitle className="text-lg">{article.title}</CardTitle>
+                  <CardDescription>{article.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-[#656176] dark:text-[#DECDF5]">
-                      <div className="flex flex-wrap gap-1">
-                        {article.tags.map((tag, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        Updated {new Date(article.lastUpdated).toLocaleDateString()}
-                      </div>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-3 w-3" />
+                      <span>{article.readTime} min read</span>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2 text-sm">
-                        <ThumbsUp className="h-4 w-4 text-green-600" />
-                        <span>{article.helpful}</span>
-                        <ThumbsDown className="h-4 w-4 text-red-600" />
-                        <span>{article.notHelpful}</span>
-                      </div>
-                      <Button size="sm" variant="outline" className="gap-2 bg-transparent">
-                        Read More
-                        <ExternalLink className="h-3 w-3" />
-                      </Button>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                      <span>{article.rating}</span>
                     </div>
                   </div>
+                  <Button variant="outline" className="w-full bg-transparent">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Read Article
+                  </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         </TabsContent>
 
-        {/* FAQs */}
+        {/* FAQs Tab */}
         <TabsContent value="faqs" className="space-y-4">
-          <Accordion type="single" collapsible className="space-y-4">
-            {filteredFAQs.map((faq) => (
-              <Card key={faq.id}>
-                <AccordionItem value={faq.id} className="border-none">
-                  <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-left font-medium">{faq.question}</span>
-                      <Badge variant="secondary" className="ml-4">
-                        {faq.category}
-                      </Badge>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-6 pb-4">
-                    <div className="space-y-4">
-                      <p className="text-[#656176] dark:text-[#DECDF5]">{faq.answer}</p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <span className="text-sm text-[#656176] dark:text-[#DECDF5]">Was this helpful?</span>
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline" className="gap-1 bg-transparent">
-                              <ThumbsUp className="h-3 w-3" />
-                              Yes ({faq.helpful})
-                            </Button>
-                            <Button size="sm" variant="outline" className="gap-1 bg-transparent">
-                              <ThumbsDown className="h-3 w-3" />
-                              No ({faq.notHelpful})
-                            </Button>
-                          </div>
-                        </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Frequently Asked Questions</CardTitle>
+              <CardDescription>Find quick answers to common questions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="space-y-2">
+                {filteredFAQs.map((faq) => (
+                  <AccordionItem key={faq.id} value={faq.id} className="border rounded-lg px-4">
+                    <AccordionTrigger className="text-left">
+                      <div className="flex items-center justify-between w-full mr-4">
+                        <span>{faq.question}</span>
+                        <Badge variant="outline" className="ml-2">
+                          {faq.category}
+                        </Badge>
                       </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Card>
-            ))}
-          </Accordion>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                      <p className="text-muted-foreground mb-4">{faq.answer}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <ThumbsUp className="h-3 w-3" />
+                          <span>{faq.helpful} people found this helpful</span>
+                        </div>
+                        <Button size="sm" variant="ghost">
+                          <ThumbsUp className="h-4 w-4 mr-1" />
+                          Helpful
+                        </Button>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        {/* Video Tutorials */}
+        {/* Videos Tab */}
         <TabsContent value="videos" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredVideos.map((video) => (
               <Card key={video.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-0">
+                <CardHeader className="p-0">
                   <div className="relative">
                     <img
                       src={video.thumbnail || "/placeholder.svg"}
@@ -365,31 +464,23 @@ export default function HelpPage() {
                       className="w-full h-48 object-cover rounded-t-lg"
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-t-lg">
-                      <Button size="lg" className="rounded-full bg-white/90 text-black hover:bg-white">
+                      <Button size="lg" className="rounded-full bg-white/90 hover:bg-white text-black">
                         <Play className="h-6 w-6" />
                       </Button>
                     </div>
                     <Badge className="absolute top-2 right-2 bg-black/70 text-white">{video.duration}</Badge>
                   </div>
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <h3 className="font-semibold text-[#534D56] dark:text-[#F8F1FF] line-clamp-2">{video.title}</h3>
-                      <Badge variant="secondary">{video.category}</Badge>
-                    </div>
-                    <p className="text-sm text-[#656176] dark:text-[#DECDF5] line-clamp-2">{video.description}</p>
-                    <div className="flex items-center justify-between text-sm text-[#656176] dark:text-[#DECDF5]">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {video.views.toLocaleString()} views
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3 w-3 text-yellow-500" />
-                          {video.rating}
-                        </div>
-                      </div>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <Badge variant="secondary">{video.category}</Badge>
+                    <h3 className="font-semibold">{video.title}</h3>
+                    <p className="text-sm text-muted-foreground">{video.description}</p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{video.views.toLocaleString()} views</span>
                       <Button size="sm" variant="outline">
-                        Watch Now
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        Watch
                       </Button>
                     </div>
                   </div>
@@ -399,183 +490,150 @@ export default function HelpPage() {
           </div>
         </TabsContent>
 
-        {/* Contact Support */}
+        {/* Contact Tab */}
         <TabsContent value="contact" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Live Chat */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-blue-600" />
-                  Live Chat
-                </CardTitle>
-                <CardDescription>Get instant help from our support team</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-green-600">Available now</span>
-                </div>
-                <p className="text-sm text-[#656176] dark:text-[#DECDF5]">Average response time: 2 minutes</p>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">Start Chat</Button>
-              </CardContent>
-            </Card>
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Contact Methods */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-[#534D56] dark:text-[#F8F1FF]">Get in Touch</h3>
 
-            {/* Email Support */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-green-600" />
-                  Email Support
-                </CardTitle>
-                <CardDescription>Send us a detailed message</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2 text-sm text-[#656176] dark:text-[#DECDF5]">
-                  <p>support@projecthub.ui.edu.ng</p>
-                  <p>Response time: 24 hours</p>
-                </div>
-                <Button variant="outline" className="w-full bg-transparent">
-                  Send Email
-                </Button>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageCircle className="h-5 w-5 text-[#1B998B]" />
+                    Live Chat
+                  </CardTitle>
+                  <CardDescription>Chat with our support team in real-time</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm">
+                      <div className="flex items-center gap-2 text-green-600 mb-1">
+                        <div className="h-2 w-2 bg-green-600 rounded-full"></div>
+                        <span>Online now</span>
+                      </div>
+                      <p className="text-muted-foreground">Average response: 2 minutes</p>
+                    </div>
+                    <Button className="bg-[#1B998B] hover:bg-[#1B998B]/90">Start Chat</Button>
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Phone Support */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Phone className="h-5 w-5 text-purple-600" />
-                  Phone Support
-                </CardTitle>
-                <CardDescription>Speak directly with our team</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2 text-sm text-[#656176] dark:text-[#DECDF5]">
-                  <p>+234 (0) 2 810 1055</p>
-                  <p>Mon-Fri: 8:00 AM - 6:00 PM</p>
-                </div>
-                <Button variant="outline" className="w-full bg-transparent">
-                  Call Now
-                </Button>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5 text-blue-600" />
+                    Email Support
+                  </CardTitle>
+                  <CardDescription>Send us an email and we'll respond within 24 hours</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">support@projecthub.edu</p>
+                    <p className="text-sm text-muted-foreground">For general inquiries and technical support</p>
+                    <Button variant="outline" className="w-full bg-transparent">
+                      <Mail className="h-4 w-4 mr-2" />
+                      Send Email
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Phone className="h-5 w-5 text-green-600" />
+                    Phone Support
+                  </CardTitle>
+                  <CardDescription>Call us for urgent issues and immediate assistance</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">+1 (555) 123-4567</p>
+                    <p className="text-sm text-muted-foreground">Monday - Friday: 9:00 AM - 6:00 PM EST</p>
+                    <Button variant="outline" className="w-full bg-transparent">
+                      <Phone className="h-4 w-4 mr-2" />
+                      Call Now
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Support Hours & Resources */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-[#534D56] dark:text-[#F8F1FF]">Support Hours</h3>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-orange-600" />
+                    Business Hours
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between">
+                    <span>Monday - Friday</span>
+                    <span className="font-medium">9:00 AM - 6:00 PM EST</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Saturday</span>
+                    <span className="font-medium">10:00 AM - 4:00 PM EST</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Sunday</span>
+                    <span className="text-muted-foreground">Closed</span>
+                  </div>
+                  <div className="pt-2 border-t">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 bg-green-600 rounded-full"></div>
+                      <span className="text-sm text-green-600 font-medium">Currently Open</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Additional Resources</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button variant="outline" className="w-full justify-start bg-transparent">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download User Manual
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start bg-transparent">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Community Forum
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start bg-transparent">
+                    <Video className="h-4 w-4 mr-2" />
+                    Video Tutorials
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start bg-transparent">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Knowledge Base
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Emergency Contact</CardTitle>
+                  <CardDescription>For critical system issues outside business hours</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-red-600">Emergency Hotline</p>
+                    <p className="text-sm">+1 (555) 999-0000</p>
+                    <p className="text-xs text-muted-foreground">Available 24/7 for critical system outages only</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-
-          {/* Contact Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Send us a Message</CardTitle>
-              <CardDescription>Fill out the form below and we'll get back to you as soon as possible</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ContactForm />
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>
-  )
-}
-
-// Contact Form Component
-function ContactForm() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    category: "general",
-    message: "",
-  })
-  const [loading, setLoading] = useState(false)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
-    try {
-      // Mock API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        category: "general",
-        message: "",
-      })
-
-      // Show success message (you can use toast here)
-      alert("Message sent successfully! We'll get back to you soon.")
-    } catch (error) {
-      alert("Failed to send message. Please try again.")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Name</label>
-          <Input
-            value={formData.name}
-            onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Email</label>
-          <Input
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-            required
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Subject</label>
-        <Input
-          value={formData.subject}
-          onChange={(e) => setFormData((prev) => ({ ...prev, subject: e.target.value }))}
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Category</label>
-        <select
-          className="w-full p-2 border rounded-md"
-          value={formData.category}
-          onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
-        >
-          <option value="general">General Inquiry</option>
-          <option value="technical">Technical Support</option>
-          <option value="account">Account Issues</option>
-          <option value="project">Project Help</option>
-          <option value="bug">Bug Report</option>
-          <option value="feature">Feature Request</option>
-        </select>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Message</label>
-        <textarea
-          className="w-full p-2 border rounded-md min-h-[120px]"
-          value={formData.message}
-          onChange={(e) => setFormData((prev) => ({ ...prev, message: e.target.value }))}
-          placeholder="Please describe your issue or question in detail..."
-          required
-        />
-      </div>
-
-      <Button type="submit" disabled={loading} className="w-full">
-        {loading ? "Sending..." : "Send Message"}
-      </Button>
-    </form>
   )
 }

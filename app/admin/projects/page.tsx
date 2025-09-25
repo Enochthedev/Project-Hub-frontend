@@ -1,32 +1,39 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useAuthStore } from "@/lib/stores/auth-store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Checkbox } from "@/components/ui/checkbox"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import {
   Search,
   MoreHorizontal,
+  Eye,
+  Check,
+  X,
+  Clock,
   Download,
   FolderOpen,
   CheckCircle,
   XCircle,
-  Clock,
-  Eye,
-  MessageSquare,
+  AlertCircle,
 } from "lucide-react"
 
 interface Project {
@@ -48,228 +55,251 @@ interface Project {
   submittedAt: string
   reviewedAt?: string
   reviewedBy?: string
-  rejectionReason?: string
+  reviewNotes?: string
+  category: string
   tags: string[]
-  department: string
   priority: "low" | "medium" | "high"
 }
 
+const mockProjects: Project[] = [
+  {
+    id: "1",
+    title: "AI-Powered Student Performance Analytics",
+    description:
+      "A machine learning system to analyze and predict student performance patterns using historical data and real-time metrics.",
+    status: "pending",
+    submittedBy: {
+      id: "1",
+      name: "John Doe",
+      email: "john.doe@university.edu",
+    },
+    supervisor: {
+      id: "2",
+      name: "Dr. Sarah Wilson",
+      email: "sarah.wilson@university.edu",
+    },
+    submittedAt: "2024-01-20",
+    category: "Machine Learning",
+    tags: ["AI", "Analytics", "Education"],
+    priority: "high",
+  },
+  {
+    id: "2",
+    title: "Blockchain-Based Academic Credential Verification",
+    description: "A decentralized system for verifying and managing academic credentials using blockchain technology.",
+    status: "under_review",
+    submittedBy: {
+      id: "3",
+      name: "Mike Johnson",
+      email: "mike.johnson@university.edu",
+    },
+    supervisor: {
+      id: "4",
+      name: "Prof. Emily Davis",
+      email: "emily.davis@university.edu",
+    },
+    submittedAt: "2024-01-18",
+    category: "Blockchain",
+    tags: ["Blockchain", "Security", "Credentials"],
+    priority: "medium",
+  },
+  {
+    id: "3",
+    title: "Smart Campus IoT Management System",
+    description: "An integrated IoT solution for managing campus resources, energy consumption, and security systems.",
+    status: "approved",
+    submittedBy: {
+      id: "5",
+      name: "Alice Brown",
+      email: "alice.brown@university.edu",
+    },
+    supervisor: {
+      id: "2",
+      name: "Dr. Sarah Wilson",
+      email: "sarah.wilson@university.edu",
+    },
+    submittedAt: "2024-01-15",
+    reviewedAt: "2024-01-17",
+    reviewedBy: "Admin User",
+    reviewNotes: "Excellent proposal with clear implementation plan and strong technical foundation.",
+    category: "IoT",
+    tags: ["IoT", "Smart Campus", "Automation"],
+    priority: "high",
+  },
+  {
+    id: "4",
+    title: "Virtual Reality Learning Environment",
+    description: "A VR platform for immersive learning experiences in various academic subjects.",
+    status: "rejected",
+    submittedBy: {
+      id: "6",
+      name: "Bob Wilson",
+      email: "bob.wilson@university.edu",
+    },
+    submittedAt: "2024-01-12",
+    reviewedAt: "2024-01-14",
+    reviewedBy: "Admin User",
+    reviewNotes:
+      "Project scope too broad for current timeline. Please refine and resubmit with more specific objectives.",
+    category: "VR/AR",
+    tags: ["VR", "Education", "Immersive"],
+    priority: "low",
+  },
+]
+
 export default function AdminProjectsPage() {
   const { user } = useAuthStore()
-  const [projects, setProjects] = useState<Project[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("pending")
-  const [departmentFilter, setDepartmentFilter] = useState<string>("all")
+  const [projects, setProjects] = useState<Project[]>(mockProjects)
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>(mockProjects)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [priorityFilter, setPriorityFilter] = useState<string>("all")
   const [selectedProjects, setSelectedProjects] = useState<string[]>([])
-  const [showReviewDialog, setShowReviewDialog] = useState(false)
   const [reviewingProject, setReviewingProject] = useState<Project | null>(null)
-  const [reviewAction, setReviewAction] = useState<"approve" | "reject">("approve")
+  const [reviewNotes, setReviewNotes] = useState("")
+  const [reviewAction, setReviewAction] = useState<"approve" | "reject" | null>(null)
 
-  // Mock data - replace with actual API call
+  // Check if user is admin
   useEffect(() => {
-    const mockProjects: Project[] = [
-      {
-        id: "1",
-        title: "AI-Powered Student Performance Analytics",
-        description:
-          "A machine learning system to analyze and predict student performance patterns using historical academic data.",
-        status: "pending",
-        submittedBy: {
-          id: "1",
-          name: "John Doe",
-          email: "john.doe@ui.edu.ng",
-        },
-        supervisor: {
-          id: "2",
-          name: "Dr. Sarah Wilson",
-          email: "sarah.wilson@ui.edu.ng",
-        },
-        submittedAt: "2024-01-18T10:30:00Z",
-        tags: ["AI", "Machine Learning", "Analytics"],
-        department: "Computer Science",
-        priority: "high",
-      },
-      {
-        id: "2",
-        title: "Blockchain-Based Academic Credential Verification",
-        description:
-          "A decentralized system for verifying and managing academic credentials using blockchain technology.",
-        status: "under_review",
-        submittedBy: {
-          id: "3",
-          name: "Michael Johnson",
-          email: "michael.johnson@ui.edu.ng",
-        },
-        supervisor: {
-          id: "4",
-          name: "Prof. David Brown",
-          email: "david.brown@ui.edu.ng",
-        },
-        submittedAt: "2024-01-17T14:20:00Z",
-        tags: ["Blockchain", "Security", "Verification"],
-        department: "Information Systems",
-        priority: "medium",
-      },
-      {
-        id: "3",
-        title: "Mobile App for Campus Navigation",
-        description:
-          "An augmented reality mobile application to help students and visitors navigate the university campus.",
-        status: "approved",
-        submittedBy: {
-          id: "5",
-          name: "Sarah Ahmed",
-          email: "sarah.ahmed@ui.edu.ng",
-        },
-        supervisor: {
-          id: "6",
-          name: "Dr. James Wilson",
-          email: "james.wilson@ui.edu.ng",
-        },
-        submittedAt: "2024-01-15T09:15:00Z",
-        reviewedAt: "2024-01-16T11:30:00Z",
-        reviewedBy: "Admin User",
-        tags: ["Mobile", "AR", "Navigation"],
-        department: "Software Engineering",
-        priority: "low",
-      },
-      {
-        id: "4",
-        title: "IoT-Based Smart Library System",
-        description: "An Internet of Things solution for automated book tracking and library management.",
-        status: "rejected",
-        submittedBy: {
-          id: "7",
-          name: "David Chen",
-          email: "david.chen@ui.edu.ng",
-        },
-        submittedAt: "2024-01-14T16:45:00Z",
-        reviewedAt: "2024-01-15T10:20:00Z",
-        reviewedBy: "Admin User",
-        rejectionReason:
-          "Similar project already exists. Please consider a different approach or focus on a specific aspect.",
-        tags: ["IoT", "Library", "Automation"],
-        department: "Computer Engineering",
-        priority: "medium",
-      },
-    ]
-
-    setTimeout(() => {
-      setProjects(mockProjects)
-      setLoading(false)
-    }, 1000)
-  }, [])
-
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch =
-      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.submittedBy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-    const matchesStatus = statusFilter === "all" || project.status === statusFilter
-    const matchesDepartment = departmentFilter === "all" || project.department === departmentFilter
-
-    return matchesSearch && matchesStatus && matchesDepartment
-  })
-
-  const handleSelectProject = (projectId: string) => {
-    setSelectedProjects((prev) =>
-      prev.includes(projectId) ? prev.filter((id) => id !== projectId) : [...prev, projectId],
-    )
-  }
-
-  const handleSelectAll = () => {
-    if (selectedProjects.length === filteredProjects.length) {
-      setSelectedProjects([])
-    } else {
-      setSelectedProjects(filteredProjects.map((project) => project.id))
+    if (user?.role !== "admin") {
+      toast.error("Access denied. Admin privileges required.")
+      return
     }
+  }, [user])
+
+  // Filter projects based on search and filters
+  useEffect(() => {
+    let filtered = projects
+
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (project) =>
+          project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          project.submittedBy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          project.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          project.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase())),
+      )
+    }
+
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((project) => project.status === statusFilter)
+    }
+
+    if (priorityFilter !== "all") {
+      filtered = filtered.filter((project) => project.priority === priorityFilter)
+    }
+
+    setFilteredProjects(filtered)
+  }, [projects, searchTerm, statusFilter, priorityFilter])
+
+  const handleReviewProject = (action: "approve" | "reject") => {
+    if (!reviewingProject) return
+
+    const updatedProject: Project = {
+      ...reviewingProject,
+      status: action === "approve" ? "approved" : "rejected",
+      reviewedAt: new Date().toISOString().split("T")[0],
+      reviewedBy: user?.name || "Admin",
+      reviewNotes: reviewNotes,
+    }
+
+    setProjects((prev) => prev.map((p) => (p.id === reviewingProject.id ? updatedProject : p)))
+    setReviewingProject(null)
+    setReviewNotes("")
+    setReviewAction(null)
+    toast.success(`Project ${action}d successfully`)
   }
 
-  const handleBulkAction = async (action: "approve" | "reject") => {
+  const handleBulkAction = (action: string) => {
     if (selectedProjects.length === 0) {
       toast.error("Please select projects first")
       return
     }
 
-    try {
-      // Mock API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+    const now = new Date().toISOString().split("T")[0]
 
-      const newStatus = action === "approve" ? "approved" : "rejected"
-      setProjects((prev) =>
-        prev.map((project) =>
-          selectedProjects.includes(project.id)
-            ? {
-                ...project,
-                status: newStatus as any,
-                reviewedAt: new Date().toISOString(),
-                reviewedBy: user?.name || "Admin",
-              }
-            : project,
-        ),
-      )
-
-      toast.success(`${selectedProjects.length} projects ${action}d successfully`)
-      setSelectedProjects([])
-    } catch (error) {
-      toast.error(`Failed to ${action} projects`)
+    switch (action) {
+      case "approve":
+        setProjects((prev) =>
+          prev.map((p) =>
+            selectedProjects.includes(p.id)
+              ? {
+                  ...p,
+                  status: "approved" as const,
+                  reviewedAt: now,
+                  reviewedBy: user?.name || "Admin",
+                }
+              : p,
+          ),
+        )
+        toast.success(`${selectedProjects.length} projects approved`)
+        break
+      case "reject":
+        setProjects((prev) =>
+          prev.map((p) =>
+            selectedProjects.includes(p.id)
+              ? {
+                  ...p,
+                  status: "rejected" as const,
+                  reviewedAt: now,
+                  reviewedBy: user?.name || "Admin",
+                }
+              : p,
+          ),
+        )
+        toast.success(`${selectedProjects.length} projects rejected`)
+        break
+      case "review":
+        setProjects((prev) =>
+          prev.map((p) => (selectedProjects.includes(p.id) ? { ...p, status: "under_review" as const } : p)),
+        )
+        toast.success(`${selectedProjects.length} projects marked for review`)
+        break
     }
+    setSelectedProjects([])
   }
 
-  const handleReviewProject = async (projectId: string, action: "approve" | "reject", reason?: string) => {
-    try {
-      // Mock API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      setProjects((prev) =>
-        prev.map((project) =>
-          project.id === projectId
-            ? {
-                ...project,
-                status: action === "approve" ? "approved" : "rejected",
-                reviewedAt: new Date().toISOString(),
-                reviewedBy: user?.name || "Admin",
-                rejectionReason: action === "reject" ? reason : undefined,
-              }
-            : project,
-        ),
-      )
-
-      setShowReviewDialog(false)
-      setReviewingProject(null)
-      toast.success(`Project ${action}d successfully`)
-    } catch (error) {
-      toast.error(`Failed to ${action} project`)
-    }
-  }
-
-  const exportProjects = () => {
+  const handleExportProjects = () => {
     const csvContent = [
-      ["Title", "Status", "Submitted By", "Supervisor", "Department", "Submitted Date", "Priority"].join(","),
-      ...filteredProjects.map((project) =>
-        [
-          project.title,
-          project.status,
-          project.submittedBy.name,
-          project.supervisor?.name || "",
-          project.department,
-          new Date(project.submittedAt).toLocaleDateString(),
-          project.priority,
-        ].join(","),
-      ),
-    ].join("\n")
+      ["Title", "Status", "Submitted By", "Supervisor", "Category", "Priority", "Submitted Date", "Reviewed Date"],
+      ...filteredProjects.map((project) => [
+        project.title,
+        project.status,
+        project.submittedBy.name,
+        project.supervisor?.name || "Not Assigned",
+        project.category,
+        project.priority,
+        project.submittedAt,
+        project.reviewedAt || "Not Reviewed",
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n")
 
     const blob = new Blob([csvContent], { type: "text/csv" })
-    const url = window.URL.createObjectURL(blob)
+    const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
     a.download = "projects.csv"
     a.click()
-    window.URL.revokeObjectURL(url)
-
+    URL.revokeObjectURL(url)
     toast.success("Projects exported successfully")
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "approved":
+        return <CheckCircle className="h-4 w-4 text-green-600" />
+      case "rejected":
+        return <XCircle className="h-4 w-4 text-red-600" />
+      case "under_review":
+        return <AlertCircle className="h-4 w-4 text-yellow-600" />
+      case "pending":
+        return <Clock className="h-4 w-4 text-blue-600" />
+      default:
+        return null
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -278,9 +308,9 @@ export default function AdminProjectsPage() {
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
       case "rejected":
         return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
       case "under_review":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+      case "pending":
         return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
@@ -300,119 +330,87 @@ export default function AdminProjectsPage() {
     }
   }
 
-  if (loading) {
+  if (user?.role !== "admin") {
     return (
-      <div className="container py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+      <div className="container py-20">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
+          <p className="text-gray-600 mt-2">You need admin privileges to access this page.</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container py-8 space-y-6">
+    <div className="container py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-[#534D56] dark:text-[#F8F1FF]">Project Management</h1>
-          <p className="text-[#656176] dark:text-[#DECDF5] mt-1">Review and manage project submissions</p>
+          <p className="text-[#656176] dark:text-[#DECDF5]">Review and manage project submissions</p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <Button onClick={exportProjects} variant="outline" className="gap-2 bg-transparent">
-            <Download className="h-4 w-4" />
+        <div className="flex gap-2">
+          <Button onClick={handleExportProjects} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg dark:bg-yellow-900">
-                <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-              </div>
-              <div>
-                <p className="text-sm text-[#656176] dark:text-[#DECDF5]">Pending Review</p>
-                <p className="text-2xl font-bold text-[#534D56] dark:text-[#F8F1FF]">
-                  {projects.filter((p) => p.status === "pending").length}
-                </p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
+            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{projects.length}</div>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg dark:bg-blue-900">
-                <Eye className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <p className="text-sm text-[#656176] dark:text-[#DECDF5]">Under Review</p>
-                <p className="text-2xl font-bold text-[#534D56] dark:text-[#F8F1FF]">
-                  {projects.filter((p) => p.status === "under_review").length}
-                </p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+            <Clock className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{projects.filter((p) => p.status === "pending").length}</div>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg dark:bg-green-900">
-                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <p className="text-sm text-[#656176] dark:text-[#DECDF5]">Approved</p>
-                <p className="text-2xl font-bold text-[#534D56] dark:text-[#F8F1FF]">
-                  {projects.filter((p) => p.status === "approved").length}
-                </p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Approved</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{projects.filter((p) => p.status === "approved").length}</div>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 rounded-lg dark:bg-red-900">
-                <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-              </div>
-              <div>
-                <p className="text-sm text-[#656176] dark:text-[#DECDF5]">Rejected</p>
-                <p className="text-2xl font-bold text-[#534D56] dark:text-[#F8F1FF]">
-                  {projects.filter((p) => p.status === "rejected").length}
-                </p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Under Review</CardTitle>
+            <AlertCircle className="h-4 w-4 text-yellow-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{projects.filter((p) => p.status === "under_review").length}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters and Search */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
+        <CardHeader>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-1 gap-4">
+              <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search projects by title, description, or tags..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search projects..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
-            </div>
-
-            <div className="flex gap-3">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Status" />
@@ -425,339 +423,251 @@ export default function AdminProjectsPage() {
                   <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
-
-              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Department" />
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Priority" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Departments</SelectItem>
-                  <SelectItem value="Computer Science">Computer Science</SelectItem>
-                  <SelectItem value="Information Systems">Information Systems</SelectItem>
-                  <SelectItem value="Software Engineering">Software Engineering</SelectItem>
-                  <SelectItem value="Computer Engineering">Computer Engineering</SelectItem>
+                  <SelectItem value="all">All Priority</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          {/* Bulk Actions */}
-          {selectedProjects.length > 0 && (
-            <div className="flex items-center gap-3 mt-4 p-3 bg-blue-50 rounded-lg dark:bg-blue-900/20">
-              <span className="text-sm text-blue-700 dark:text-blue-300">
-                {selectedProjects.length} projects selected
-              </span>
+            {selectedProjects.length > 0 && (
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleBulkAction("approve")}
-                  className="text-green-600 border-green-200 hover:bg-green-50"
-                >
-                  <CheckCircle className="h-4 w-4 mr-1" />
-                  Approve
+                <Button size="sm" onClick={() => handleBulkAction("approve")} variant="outline">
+                  <Check className="h-4 w-4 mr-1" />
+                  Approve ({selectedProjects.length})
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleBulkAction("reject")}
-                  className="text-red-600 border-red-200 hover:bg-red-50"
-                >
-                  <XCircle className="h-4 w-4 mr-1" />
+                <Button size="sm" onClick={() => handleBulkAction("reject")} variant="outline">
+                  <X className="h-4 w-4 mr-1" />
                   Reject
                 </Button>
+                <Button size="sm" onClick={() => handleBulkAction("review")} variant="outline">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  Review
+                </Button>
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Projects Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedProjects.length === filteredProjects.length && filteredProjects.length > 0}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Submitted By</TableHead>
-                <TableHead>Supervisor</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Submitted</TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProjects.map((project) => (
-                <TableRow key={project.id}>
-                  <TableCell>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
                     <Checkbox
-                      checked={selectedProjects.includes(project.id)}
-                      onCheckedChange={() => handleSelectProject(project.id)}
+                      checked={selectedProjects.length === filteredProjects.length && filteredProjects.length > 0}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedProjects(filteredProjects.map((p) => p.id))
+                        } else {
+                          setSelectedProjects([])
+                        }
+                      }}
                     />
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <p className="font-medium text-[#534D56] dark:text-[#F8F1FF] line-clamp-1">{project.title}</p>
-                      <p className="text-sm text-[#656176] dark:text-[#DECDF5] line-clamp-2">{project.description}</p>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {project.tags.slice(0, 3).map((tag, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                        {project.tags.length > 3 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{project.tags.length - 3}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(project.status)}>{project.status.replace("_", " ")}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getPriorityColor(project.priority)}>{project.priority}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={project.submittedBy.avatar || "/placeholder.svg"} />
-                        <AvatarFallback className="text-xs">
-                          {project.submittedBy.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
+                  </TableHead>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Submitted By</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Submitted</TableHead>
+                  <TableHead className="w-12"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProjects.map((project) => (
+                  <TableRow key={project.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedProjects.includes(project.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedProjects((prev) => [...prev, project.id])
+                          } else {
+                            setSelectedProjects((prev) => prev.filter((id) => id !== project.id))
+                          }
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
                       <div>
-                        <p className="text-sm font-medium text-[#534D56] dark:text-[#F8F1FF]">
-                          {project.submittedBy.name}
-                        </p>
-                        <p className="text-xs text-[#656176] dark:text-[#DECDF5]">{project.submittedBy.email}</p>
+                        <div className="font-medium">{project.title}</div>
+                        <div className="text-sm text-muted-foreground line-clamp-2">{project.description}</div>
+                        <div className="flex gap-1 mt-1">
+                          {project.tags.slice(0, 3).map((tag) => (
+                            <Badge key={tag} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {project.supervisor ? (
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(project.status)}
+                        <Badge className={getStatusColor(project.status)}>{project.status.replace("_", " ")}</Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getPriorityColor(project.priority)}>{project.priority}</Badge>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
+                          <AvatarImage src={project.submittedBy.avatar || "/placeholder.svg"} />
                           <AvatarFallback className="text-xs">
-                            {project.supervisor.name
+                            {project.submittedBy.name
                               .split(" ")
                               .map((n) => n[0])
                               .join("")}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-sm font-medium text-[#534D56] dark:text-[#F8F1FF]">
-                            {project.supervisor.name}
-                          </p>
-                          <p className="text-xs text-[#656176] dark:text-[#DECDF5]">{project.supervisor.email}</p>
+                          <div className="text-sm font-medium">{project.submittedBy.name}</div>
+                          <div className="text-xs text-muted-foreground">{project.submittedBy.email}</div>
                         </div>
                       </div>
-                    ) : (
-                      <span className="text-sm text-[#656176] dark:text-[#DECDF5]">Not assigned</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-[#656176] dark:text-[#DECDF5]">{project.department}</TableCell>
-                  <TableCell className="text-[#656176] dark:text-[#DECDF5]">
-                    {new Date(project.submittedAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setReviewingProject(project)
-                            setReviewAction("approve")
-                            setShowReviewDialog(true)
-                          }}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-                          Approve
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setReviewingProject(project)
-                            setReviewAction("reject")
-                            setShowReviewDialog(true)
-                          }}
-                        >
-                          <XCircle className="h-4 w-4 mr-2 text-red-600" />
-                          Reject
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <MessageSquare className="h-4 w-4 mr-2" />
-                          Contact Student
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {filteredProjects.length === 0 && (
-            <div className="text-center py-12">
-              <FolderOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-lg font-medium text-[#534D56] dark:text-[#F8F1FF]">No projects found</p>
-              <p className="text-[#656176] dark:text-[#DECDF5]">Try adjusting your search or filters</p>
-            </div>
-          )}
+                    </TableCell>
+                    <TableCell>{project.category}</TableCell>
+                    <TableCell>{project.submittedAt}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setReviewingProject(project)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Review
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setReviewingProject(project)
+                              setReviewAction("approve")
+                            }}
+                          >
+                            <Check className="h-4 w-4 mr-2" />
+                            Approve
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setReviewingProject(project)
+                              setReviewAction("reject")
+                            }}
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Reject
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
       {/* Review Project Dialog */}
-      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{reviewAction === "approve" ? "Approve Project" : "Reject Project"}</DialogTitle>
-            <DialogDescription>{reviewingProject?.title}</DialogDescription>
-          </DialogHeader>
-
-          {reviewingProject && (
-            <ReviewProjectForm
-              project={reviewingProject}
-              action={reviewAction}
-              onSubmit={(reason) => handleReviewProject(reviewingProject.id, reviewAction, reason)}
-              onCancel={() => {
-                setShowReviewDialog(false)
-                setReviewingProject(null)
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
-  )
-}
-
-// Review Project Form Component
-function ReviewProjectForm({
-  project,
-  action,
-  onSubmit,
-  onCancel,
-}: {
-  project: Project
-  action: "approve" | "reject"
-  onSubmit: (reason?: string) => void
-  onCancel: () => void
-}) {
-  const [reason, setReason] = useState("")
-  const [loading, setLoading] = useState(false)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (action === "reject" && !reason.trim()) {
-      toast.error("Please provide a reason for rejection")
-      return
-    }
-
-    setLoading(true)
-    await onSubmit(reason)
-    setLoading(false)
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Project Details */}
-      <div className="space-y-4">
-        <div>
-          <h3 className="font-medium text-[#534D56] dark:text-[#F8F1FF] mb-2">Project Description</h3>
-          <p className="text-sm text-[#656176] dark:text-[#DECDF5] bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-            {project.description}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h4 className="font-medium text-[#534D56] dark:text-[#F8F1FF] mb-1">Submitted By</h4>
-            <p className="text-sm text-[#656176] dark:text-[#DECDF5]">{project.submittedBy.name}</p>
-            <p className="text-xs text-[#656176] dark:text-[#DECDF5]">{project.submittedBy.email}</p>
-          </div>
-
-          <div>
-            <h4 className="font-medium text-[#534D56] dark:text-[#F8F1FF] mb-1">Department</h4>
-            <p className="text-sm text-[#656176] dark:text-[#DECDF5]">{project.department}</p>
-          </div>
-        </div>
-
-        <div>
-          <h4 className="font-medium text-[#534D56] dark:text-[#F8F1FF] mb-2">Tags</h4>
-          <div className="flex flex-wrap gap-2">
-            {project.tags.map((tag, index) => (
-              <Badge key={index} variant="secondary">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {action === "reject" && (
-          <div className="space-y-2">
-            <Label htmlFor="reason">
-              Reason for Rejection <span className="text-red-500">*</span>
-            </Label>
-            <Textarea
-              id="reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Please provide a detailed reason for rejecting this project..."
-              rows={4}
-              required
-            />
-          </div>
-        )}
-
-        {action === "approve" && (
-          <div className="space-y-2">
-            <Label htmlFor="approval-note">Additional Notes (Optional)</Label>
-            <Textarea
-              id="approval-note"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Any additional notes or feedback for the student..."
-              rows={3}
-            />
-          </div>
-        )}
-
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={loading}
-            className={action === "approve" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}
-          >
-            {loading ? "Processing..." : action === "approve" ? "Approve Project" : "Reject Project"}
-          </Button>
-        </div>
-      </form>
+      {reviewingProject && (
+        <Dialog
+          open={!!reviewingProject}
+          onOpenChange={() => {
+            setReviewingProject(null)
+            setReviewNotes("")
+            setReviewAction(null)
+          }}
+        >
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Review Project</DialogTitle>
+              <DialogDescription>Review and provide feedback for this project submission</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label className="text-base font-semibold">Project Title</Label>
+                <p className="text-sm text-muted-foreground mt-1">{reviewingProject.title}</p>
+              </div>
+              <div>
+                <Label className="text-base font-semibold">Description</Label>
+                <p className="text-sm text-muted-foreground mt-1">{reviewingProject.description}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-base font-semibold">Submitted By</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={reviewingProject.submittedBy.avatar || "/placeholder.svg"} />
+                      <AvatarFallback className="text-xs">
+                        {reviewingProject.submittedBy.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="text-sm font-medium">{reviewingProject.submittedBy.name}</div>
+                      <div className="text-xs text-muted-foreground">{reviewingProject.submittedBy.email}</div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-base font-semibold">Category</Label>
+                  <p className="text-sm text-muted-foreground mt-1">{reviewingProject.category}</p>
+                </div>
+              </div>
+              <div>
+                <Label className="text-base font-semibold">Tags</Label>
+                <div className="flex gap-1 mt-1">
+                  {reviewingProject.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="review-notes">Review Notes</Label>
+                <Textarea
+                  id="review-notes"
+                  placeholder="Add your review comments..."
+                  value={reviewNotes}
+                  onChange={(e) => setReviewNotes(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setReviewingProject(null)
+                  setReviewNotes("")
+                  setReviewAction(null)
+                }}
+              >
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={() => handleReviewProject("reject")}>
+                <X className="h-4 w-4 mr-2" />
+                Reject
+              </Button>
+              <Button onClick={() => handleReviewProject("approve")} className="bg-[#1B998B] hover:bg-[#1B998B]/90">
+                <Check className="h-4 w-4 mr-2" />
+                Approve
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

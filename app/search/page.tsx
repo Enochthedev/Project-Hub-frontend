@@ -1,28 +1,26 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
-import { useAuthStore } from "@/lib/stores/auth-store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import {
   Search,
   BookmarkPlus,
-  ExternalLink,
   FolderOpen,
   Users,
   MessageSquare,
-  Target,
-  Star,
+  Calendar,
   TrendingUp,
   Clock,
+  Eye,
+  User,
+  Tag,
 } from "lucide-react"
 
 interface SearchResult {
@@ -31,194 +29,171 @@ interface SearchResult {
   title: string
   description: string
   relevanceScore: number
-  metadata: any
-  createdAt: string
-  updatedAt: string
+  metadata: {
+    author?: string
+    date?: string
+    tags?: string[]
+    status?: string
+    avatar?: string
+    category?: string
+  }
 }
 
-interface SearchFilters {
-  type: string
-  dateRange: string
-  sortBy: string
-  department?: string
-}
+const mockSearchResults: SearchResult[] = [
+  {
+    id: "1",
+    type: "project",
+    title: "AI-Powered Student Performance Analytics",
+    description:
+      "A machine learning system to analyze and predict student performance patterns using historical data and real-time metrics.",
+    relevanceScore: 95,
+    metadata: {
+      author: "John Doe",
+      date: "2024-01-20",
+      tags: ["AI", "Analytics", "Education"],
+      status: "Active",
+      category: "Machine Learning",
+    },
+  },
+  {
+    id: "2",
+    type: "user",
+    title: "Dr. Sarah Wilson",
+    description:
+      "Professor of Computer Science specializing in Machine Learning and AI. Supervising 12 active projects.",
+    relevanceScore: 88,
+    metadata: {
+      date: "Last active: 2024-01-19",
+      tags: ["Supervisor", "AI", "Machine Learning"],
+      status: "Active",
+      avatar: "/placeholder-user.jpg",
+    },
+  },
+  {
+    id: "3",
+    type: "conversation",
+    title: "Discussion: Best practices for ML model validation",
+    description:
+      "A comprehensive discussion about validation techniques for machine learning models in academic research.",
+    relevanceScore: 82,
+    metadata: {
+      author: "AI Assistant",
+      date: "2024-01-18",
+      tags: ["ML", "Validation", "Best Practices"],
+      category: "Technical Discussion",
+    },
+  },
+  {
+    id: "4",
+    type: "milestone",
+    title: "Project Proposal Submission",
+    description: "Deadline for submitting final project proposals for the Spring 2024 semester.",
+    relevanceScore: 75,
+    metadata: {
+      date: "2024-02-15",
+      status: "Upcoming",
+      category: "Academic Deadline",
+    },
+  },
+  {
+    id: "5",
+    type: "project",
+    title: "Blockchain-Based Academic Credential Verification",
+    description: "A decentralized system for verifying and managing academic credentials using blockchain technology.",
+    relevanceScore: 70,
+    metadata: {
+      author: "Mike Johnson",
+      date: "2024-01-18",
+      tags: ["Blockchain", "Security", "Credentials"],
+      status: "Under Review",
+      category: "Blockchain",
+    },
+  },
+]
 
-function SearchContent() {
+const popularSearches = [
+  "machine learning projects",
+  "AI research proposals",
+  "data science tutorials",
+  "project collaboration",
+  "academic deadlines",
+  "supervisor recommendations",
+]
+
+export default function SearchPage() {
   const searchParams = useSearchParams()
-  const { user } = useAuthStore()
-  const [query, setQuery] = useState(searchParams.get("q") || "")
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [loading, setLoading] = useState(false)
-  const [filters, setFilters] = useState<SearchFilters>({
-    type: "all",
-    dateRange: "all",
-    sortBy: "relevance",
-  })
+  const initialQuery = searchParams.get("q") || ""
+
+  const [searchQuery, setSearchQuery] = useState(initialQuery)
   const [activeTab, setActiveTab] = useState("all")
-  const [popularSearches] = useState([
-    "Machine Learning Projects",
-    "Web Development",
-    "Mobile Apps",
-    "AI Research",
-    "Database Design",
-    "Blockchain",
-    "IoT Projects",
-    "Data Science",
-  ])
+  const [sortBy, setSortBy] = useState("relevance")
+  const [results, setResults] = useState<SearchResult[]>(mockSearchResults)
+  const [isSearching, setIsSearching] = useState(false)
 
-  // Mock search results
-  const mockResults: SearchResult[] = [
-    {
-      id: "1",
-      type: "project",
-      title: "AI-Powered Student Performance Analytics",
-      description:
-        "A machine learning system to analyze and predict student performance patterns using historical academic data and behavioral indicators.",
-      relevanceScore: 0.95,
-      metadata: {
-        author: "John Doe",
-        department: "Computer Science",
-        tags: ["AI", "Machine Learning", "Analytics"],
-        status: "active",
-        supervisor: "Dr. Sarah Wilson",
-      },
-      createdAt: "2024-01-15T10:30:00Z",
-      updatedAt: "2024-01-20T14:20:00Z",
-    },
-    {
-      id: "2",
-      type: "user",
-      title: "Dr. Sarah Wilson",
-      description:
-        "Senior Lecturer in Computer Science specializing in Machine Learning and Data Analytics. Available for project supervision.",
-      relevanceScore: 0.88,
-      metadata: {
-        role: "supervisor",
-        department: "Computer Science",
-        expertise: ["Machine Learning", "Data Science", "AI"],
-        projectCount: 12,
-        rating: 4.8,
-      },
-      createdAt: "2023-08-10T09:00:00Z",
-      updatedAt: "2024-01-19T16:45:00Z",
-    },
-    {
-      id: "3",
-      type: "conversation",
-      title: "How to implement neural networks in Python?",
-      description:
-        "Detailed discussion about implementing neural networks from scratch using Python and NumPy, including backpropagation algorithms.",
-      relevanceScore: 0.82,
-      metadata: {
-        participants: ["AI Assistant", "Student"],
-        messageCount: 15,
-        topic: "Machine Learning",
-        isBookmarked: false,
-      },
-      createdAt: "2024-01-18T11:20:00Z",
-      updatedAt: "2024-01-18T12:30:00Z",
-    },
-    {
-      id: "4",
-      type: "milestone",
-      title: "Complete Literature Review",
-      description:
-        "Comprehensive literature review for AI-powered analytics project covering recent advances in educational data mining.",
-      relevanceScore: 0.76,
-      metadata: {
-        project: "AI-Powered Student Performance Analytics",
-        status: "completed",
-        dueDate: "2024-01-25",
-        progress: 100,
-      },
-      createdAt: "2024-01-10T08:00:00Z",
-      updatedAt: "2024-01-22T15:30:00Z",
-    },
-    {
-      id: "5",
-      type: "project",
-      title: "Blockchain-Based Academic Credential Verification",
-      description:
-        "A decentralized system for verifying and managing academic credentials using blockchain technology and smart contracts.",
-      relevanceScore: 0.71,
-      metadata: {
-        author: "Michael Johnson",
-        department: "Information Systems",
-        tags: ["Blockchain", "Security", "Verification"],
-        status: "pending",
-        supervisor: "Prof. David Brown",
-      },
-      createdAt: "2024-01-12T14:15:00Z",
-      updatedAt: "2024-01-20T10:45:00Z",
-    },
-  ]
+  // Filter results based on active tab
+  const filteredResults = useMemo(() => {
+    let filtered = results
 
-  useEffect(() => {
-    if (query) {
-      performSearch(query)
+    if (activeTab !== "all") {
+      filtered = filtered.filter((result) => result.type === activeTab)
     }
-  }, [query, filters])
 
-  const performSearch = async (searchQuery: string) => {
-    if (!searchQuery.trim()) return
+    // Sort results
+    switch (sortBy) {
+      case "relevance":
+        filtered.sort((a, b) => b.relevanceScore - a.relevanceScore)
+        break
+      case "date":
+        filtered.sort((a, b) => new Date(b.metadata.date || "").getTime() - new Date(a.metadata.date || "").getTime())
+        break
+      case "title":
+        filtered.sort((a, b) => a.title.localeCompare(b.title))
+        break
+    }
 
-    setLoading(true)
-    try {
-      // Mock API call - replace with actual search API
-      await new Promise((resolve) => setTimeout(resolve, 800))
+    return filtered
+  }, [results, activeTab, sortBy])
 
-      let filteredResults = mockResults.filter(
+  // Get result counts by type
+  const resultCounts = useMemo(() => {
+    const counts = {
+      all: results.length,
+      project: 0,
+      user: 0,
+      conversation: 0,
+      milestone: 0,
+    }
+
+    results.forEach((result) => {
+      counts[result.type]++
+    })
+
+    return counts
+  }, [results])
+
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) return
+
+    setIsSearching(true)
+
+    // Simulate search API call
+    setTimeout(() => {
+      // Filter mock results based on query
+      const filtered = mockSearchResults.filter(
         (result) =>
-          result.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          result.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (result.metadata.tags &&
-            result.metadata.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))),
+          result.title.toLowerCase().includes(query.toLowerCase()) ||
+          result.description.toLowerCase().includes(query.toLowerCase()) ||
+          result.metadata.tags?.some((tag) => tag.toLowerCase().includes(query.toLowerCase())) ||
+          result.metadata.author?.toLowerCase().includes(query.toLowerCase()),
       )
 
-      // Apply filters
-      if (filters.type !== "all") {
-        filteredResults = filteredResults.filter((result) => result.type === filters.type)
-      }
-
-      // Apply sorting
-      if (filters.sortBy === "relevance") {
-        filteredResults.sort((a, b) => b.relevanceScore - a.relevanceScore)
-      } else if (filters.sortBy === "date") {
-        filteredResults.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      }
-
-      setResults(filteredResults)
-    } catch (error) {
-      toast.error("Search failed. Please try again.")
-    } finally {
-      setLoading(false)
-    }
+      setResults(filtered)
+      setIsSearching(false)
+    }, 500)
   }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (query.trim()) {
-      performSearch(query)
-      // Update URL
-      const url = new URL(window.location.href)
-      url.searchParams.set("q", query)
-      window.history.pushState({}, "", url.toString())
-    }
-  }
-
-  const handleBookmark = async (resultId: string) => {
-    try {
-      // Mock API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      toast.success("Added to bookmarks")
-    } catch (error) {
-      toast.error("Failed to bookmark item")
-    }
-  }
-
-  const getResultsByType = (type: string) => {
-    if (type === "all") return results
-    return results.filter((result) => result.type === type)
+  const handleBookmark = (resultId: string) => {
+    toast.success("Added to bookmarks")
   }
 
   const getTypeIcon = (type: string) => {
@@ -230,9 +205,9 @@ function SearchContent() {
       case "conversation":
         return <MessageSquare className="h-4 w-4" />
       case "milestone":
-        return <Target className="h-4 w-4" />
+        return <Calendar className="h-4 w-4" />
       default:
-        return <Search className="h-4 w-4" />
+        return null
     }
   }
 
@@ -251,326 +226,222 @@ function SearchContent() {
     }
   }
 
+  useEffect(() => {
+    if (initialQuery) {
+      handleSearch(initialQuery)
+    }
+  }, [initialQuery])
+
   return (
-    <div className="container py-8 space-y-6">
+    <div className="container py-6 space-y-6">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-[#534D56] dark:text-[#F8F1FF]">Search Everything</h1>
-        <p className="text-[#656176] dark:text-[#DECDF5]">
-          Find projects, users, conversations, and milestones across the platform
-        </p>
-      </div>
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-3xl font-bold text-[#534D56] dark:text-[#F8F1FF]">Search</h1>
+          <p className="text-[#656176] dark:text-[#DECDF5]">Find projects, users, conversations, and more</p>
+        </div>
 
-      {/* Search Form */}
-      <Card>
-        <CardContent className="p-6">
-          <form onSubmit={handleSearch} className="space-y-4">
-            <div className="flex gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search for projects, users, conversations..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Button type="submit" disabled={loading} className="bg-[#1B998B] hover:bg-[#1B998B]/90">
-                {loading ? "Searching..." : "Search"}
-              </Button>
-            </div>
+        {/* Search Bar */}
+        <div className="flex gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search for projects, users, conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleSearch(searchQuery)}
+              className="pl-10"
+            />
+          </div>
+          <Button
+            onClick={() => handleSearch(searchQuery)}
+            disabled={isSearching}
+            className="bg-[#1B998B] hover:bg-[#1B998B]/90"
+          >
+            {isSearching ? "Searching..." : "Search"}
+          </Button>
+        </div>
 
-            {/* Filters */}
-            <div className="flex flex-wrap gap-3">
-              <Select
-                value={filters.sortBy}
-                onValueChange={(value) => setFilters((prev) => ({ ...prev, sortBy: value }))}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="relevance">Relevance</SelectItem>
-                  <SelectItem value="date">Date</SelectItem>
-                  <SelectItem value="popularity">Popularity</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={filters.dateRange}
-                onValueChange={(value) => setFilters((prev) => ({ ...prev, dateRange: value }))}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Date range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All time</SelectItem>
-                  <SelectItem value="week">Past week</SelectItem>
-                  <SelectItem value="month">Past month</SelectItem>
-                  <SelectItem value="year">Past year</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Popular Searches */}
-      {!query && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Popular Searches
-            </CardTitle>
-            <CardDescription>Trending searches on the platform</CardDescription>
-          </CardHeader>
-          <CardContent>
+        {/* Popular Searches */}
+        {!searchQuery && (
+          <div>
+            <h3 className="text-sm font-medium text-[#534D56] dark:text-[#F8F1FF] mb-2">Popular Searches</h3>
             <div className="flex flex-wrap gap-2">
-              {popularSearches.map((search, index) => (
+              {popularSearches.map((search) => (
                 <Button
-                  key={index}
+                  key={search}
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setQuery(search)
-                    performSearch(search)
+                    setSearchQuery(search)
+                    handleSearch(search)
                   }}
-                  className="text-sm"
+                  className="text-xs"
                 >
                   {search}
                 </Button>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
+      </div>
 
-      {/* Search Results */}
-      {query && (
-        <div className="space-y-6">
-          {/* Results Summary */}
+      {/* Results */}
+      {searchQuery && (
+        <div className="space-y-4">
+          {/* Results Header */}
           <div className="flex items-center justify-between">
-            <p className="text-[#656176] dark:text-[#DECDF5]">
-              {loading ? "Searching..." : `${results.length} results for "${query}"`}
-            </p>
-            {results.length > 0 && (
-              <p className="text-sm text-[#656176] dark:text-[#DECDF5]">
-                Search completed in 0.{Math.floor(Math.random() * 9) + 1} seconds
-              </p>
-            )}
+            <div>
+              <h2 className="text-xl font-semibold text-[#534D56] dark:text-[#F8F1FF]">
+                Search Results for "{searchQuery}"
+              </h2>
+              <p className="text-sm text-[#656176] dark:text-[#DECDF5]">{filteredResults.length} results found</p>
+            </div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="relevance">Relevance</SelectItem>
+                <SelectItem value="date">Date</SelectItem>
+                <SelectItem value="title">Title</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Results Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="all" className="flex items-center gap-2">
-                All ({results.length})
-              </TabsTrigger>
-              <TabsTrigger value="project" className="flex items-center gap-2">
-                <FolderOpen className="h-4 w-4" />
-                Projects ({getResultsByType("project").length})
-              </TabsTrigger>
-              <TabsTrigger value="user" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Users ({getResultsByType("user").length})
-              </TabsTrigger>
-              <TabsTrigger value="conversation" className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                Chats ({getResultsByType("conversation").length})
-              </TabsTrigger>
-              <TabsTrigger value="milestone" className="flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                Milestones ({getResultsByType("milestone").length})
-              </TabsTrigger>
+              <TabsTrigger value="all">All ({resultCounts.all})</TabsTrigger>
+              <TabsTrigger value="project">Projects ({resultCounts.project})</TabsTrigger>
+              <TabsTrigger value="user">Users ({resultCounts.user})</TabsTrigger>
+              <TabsTrigger value="conversation">Conversations ({resultCounts.conversation})</TabsTrigger>
+              <TabsTrigger value="milestone">Milestones ({resultCounts.milestone})</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="all" className="space-y-4">
-              <SearchResultsList results={results} onBookmark={handleBookmark} />
-            </TabsContent>
+            <TabsContent value={activeTab} className="space-y-4">
+              {isSearching ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Card key={i}>
+                      <CardContent className="p-6">
+                        <div className="animate-pulse space-y-3">
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          <div className="h-3 bg-gray-200 rounded w-full"></div>
+                          <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : filteredResults.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredResults.map((result) => (
+                    <Card key={result.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 space-y-3">
+                            {/* Result Header */}
+                            <div className="flex items-center gap-3">
+                              <Badge className={getTypeColor(result.type)}>
+                                <div className="flex items-center gap-1">
+                                  {getTypeIcon(result.type)}
+                                  <span className="capitalize">{result.type}</span>
+                                </div>
+                              </Badge>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <TrendingUp className="h-3 w-3" />
+                                <span>{result.relevanceScore}% match</span>
+                              </div>
+                            </div>
 
-            <TabsContent value="project" className="space-y-4">
-              <SearchResultsList results={getResultsByType("project")} onBookmark={handleBookmark} />
-            </TabsContent>
+                            {/* Result Content */}
+                            <div>
+                              <h3 className="text-lg font-semibold text-[#534D56] dark:text-[#F8F1FF] mb-2">
+                                {result.title}
+                              </h3>
+                              <p className="text-[#656176] dark:text-[#DECDF5] line-clamp-2">{result.description}</p>
+                            </div>
 
-            <TabsContent value="user" className="space-y-4">
-              <SearchResultsList results={getResultsByType("user")} onBookmark={handleBookmark} />
-            </TabsContent>
+                            {/* Result Metadata */}
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              {result.metadata.author && (
+                                <div className="flex items-center gap-1">
+                                  <User className="h-3 w-3" />
+                                  <span>{result.metadata.author}</span>
+                                </div>
+                              )}
+                              {result.metadata.date && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  <span>{result.metadata.date}</span>
+                                </div>
+                              )}
+                              {result.metadata.status && (
+                                <Badge variant="outline" className="text-xs">
+                                  {result.metadata.status}
+                                </Badge>
+                              )}
+                            </div>
 
-            <TabsContent value="conversation" className="space-y-4">
-              <SearchResultsList results={getResultsByType("conversation")} onBookmark={handleBookmark} />
-            </TabsContent>
+                            {/* Tags */}
+                            {result.metadata.tags && result.metadata.tags.length > 0 && (
+                              <div className="flex items-center gap-2">
+                                <Tag className="h-3 w-3 text-muted-foreground" />
+                                <div className="flex gap-1">
+                                  {result.metadata.tags.slice(0, 3).map((tag) => (
+                                    <Badge key={tag} variant="secondary" className="text-xs">
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                  {result.metadata.tags.length > 3 && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      +{result.metadata.tags.length - 3} more
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
 
-            <TabsContent value="milestone" className="space-y-4">
-              <SearchResultsList results={getResultsByType("milestone")} onBookmark={handleBookmark} />
+                          {/* Actions */}
+                          <div className="flex gap-2 ml-4">
+                            <Button size="sm" variant="outline" onClick={() => handleBookmark(result.id)}>
+                              <BookmarkPlus className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="outline">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-[#534D56] dark:text-[#F8F1FF] mb-2">No results found</h3>
+                    <p className="text-[#656176] dark:text-[#DECDF5] mb-4">
+                      Try adjusting your search terms or browse popular searches above.
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchQuery("")
+                        setResults(mockSearchResults)
+                      }}
+                    >
+                      Clear Search
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
           </Tabs>
         </div>
       )}
-    </div>
-  )
-}
-
-// Search Results List Component
-function SearchResultsList({
-  results,
-  onBookmark,
-}: {
-  results: SearchResult[]
-  onBookmark: (id: string) => void
-}) {
-  if (results.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <p className="text-lg font-medium text-[#534D56] dark:text-[#F8F1FF]">No results found</p>
-        <p className="text-[#656176] dark:text-[#DECDF5]">Try different keywords or adjust your filters</p>
-      </div>
-    )
-  }
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "project":
-        return <FolderOpen className="h-4 w-4" />
-      case "user":
-        return <Users className="h-4 w-4" />
-      case "conversation":
-        return <MessageSquare className="h-4 w-4" />
-      case "milestone":
-        return <Target className="h-4 w-4" />
-      default:
-        return <Search className="h-4 w-4" />
-    }
-  }
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "project":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-      case "user":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-      case "conversation":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-      case "milestone":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      {results.map((result) => (
-        <Card key={result.id} className="hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 space-y-3">
-                {/* Header */}
-                <div className="flex items-center gap-3">
-                  <Badge className={getTypeColor(result.type)}>
-                    {getTypeIcon(result.type)}
-                    <span className="ml-1 capitalize">{result.type}</span>
-                  </Badge>
-                  <div className="flex items-center gap-2">
-                    <Star className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm text-[#656176] dark:text-[#DECDF5]">
-                      {Math.round(result.relevanceScore * 100)}% match
-                    </span>
-                  </div>
-                </div>
-
-                {/* Title and Description */}
-                <div>
-                  <h3 className="text-lg font-semibold text-[#534D56] dark:text-[#F8F1FF] mb-2">{result.title}</h3>
-                  <p className="text-[#656176] dark:text-[#DECDF5] line-clamp-2">{result.description}</p>
-                </div>
-
-                {/* Metadata */}
-                <div className="flex flex-wrap items-center gap-4 text-sm text-[#656176] dark:text-[#DECDF5]">
-                  {result.metadata.author && (
-                    <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      {result.metadata.author}
-                    </div>
-                  )}
-                  {result.metadata.department && (
-                    <div className="flex items-center gap-1">
-                      <FolderOpen className="h-3 w-3" />
-                      {result.metadata.department}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {new Date(result.updatedAt).toLocaleDateString()}
-                  </div>
-                </div>
-
-                {/* Tags */}
-                {result.metadata.tags && (
-                  <div className="flex flex-wrap gap-2">
-                    {result.metadata.tags.slice(0, 4).map((tag: string, index: number) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {result.metadata.tags.length > 4 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{result.metadata.tags.length - 4} more
-                      </Badge>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-col gap-2">
-                <Button size="sm" variant="outline" onClick={() => onBookmark(result.id)} className="gap-2">
-                  <BookmarkPlus className="h-4 w-4" />
-                  Bookmark
-                </Button>
-                <Button size="sm" variant="ghost" className="gap-2">
-                  <ExternalLink className="h-4 w-4" />
-                  View
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
-}
-
-export default function SearchPage() {
-  return (
-    <Suspense fallback={<SearchPageLoading />}>
-      <SearchContent />
-    </Suspense>
-  )
-}
-
-function SearchPageLoading() {
-  return (
-    <div className="container py-8 space-y-6">
-      <div className="text-center space-y-4">
-        <div className="h-8 bg-gray-200 rounded w-48 mx-auto"></div>
-        <div className="h-4 bg-gray-200 rounded w-96 mx-auto"></div>
-      </div>
-      <Card>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div className="flex gap-3">
-              <div className="flex-1 h-10 bg-gray-200 rounded"></div>
-              <div className="h-10 w-24 bg-gray-200 rounded"></div>
-            </div>
-            <div className="flex gap-3">
-              <div className="h-10 w-40 bg-gray-200 rounded"></div>
-              <div className="h-10 w-40 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }
