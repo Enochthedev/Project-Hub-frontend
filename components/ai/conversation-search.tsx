@@ -1,339 +1,168 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useAIAssistantStore } from "@/lib/stores/ai-assistant-store"
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { 
-  Search, 
-  Filter, 
-  Calendar,
-  MessageCircle,
-  Star,
-  Bookmark,
-  X,
-  SlidersHorizontal
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Calendar as CalendarComponent } from "@/components/ui/calendar"
-import { format } from "date-fns"
-
-interface ConversationSearchProps {
-  onResultsChange?: (results: any[]) => void
-  className?: string
-}
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Search, Filter, X } from "lucide-react"
 
 interface SearchFilters {
   query: string
-  status?: 'active' | 'archived' | 'escalated'
-  dateRange?: {
-    from: Date
-    to: Date
-  }
-  hasBookmarks?: boolean
-  minRating?: number
-  projectId?: string
+  dateRange: string
+  tags: string[]
+  status: string
 }
 
-export function ConversationSearch({ onResultsChange, className }: ConversationSearchProps) {
-  const { searchConversations, conversations, isLoadingConversations } = useAIAssistantStore()
-  
+export function ConversationSearch() {
   const [filters, setFilters] = useState<SearchFilters>({
-    query: '',
+    query: "",
+    dateRange: "all",
+    tags: [],
+    status: "all",
   })
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
-  const [searchResults, setSearchResults] = useState<any[]>([])
 
-  // Debounced search
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      performSearch()
-    }, 300)
+  const availableTags = [
+    "planning",
+    "web-dev",
+    "ml",
+    "concepts",
+    "database",
+    "design",
+    "react",
+    "best-practices",
+    "api",
+    "auth",
+  ]
 
-    return () => clearTimeout(timeoutId)
-  }, [filters])
-
-  const performSearch = async () => {
-    try {
-      const searchParams: any = {}
-      
-      if (filters.query) searchParams.search = filters.query
-      if (filters.status) searchParams.status = filters.status
-      if (filters.projectId) searchParams.projectId = filters.projectId
-      if (filters.dateRange?.from) {
-        searchParams.startDate = filters.dateRange.from.toISOString()
-      }
-      if (filters.dateRange?.to) {
-        searchParams.endDate = filters.dateRange.to.toISOString()
-      }
-
-      await searchConversations(searchParams)
-      
-      // Filter results based on additional criteria
-      let results = conversations
-      
-      if (filters.hasBookmarks) {
-        results = results.filter(conv => 
-          conv.messages?.some(msg => msg.isBookmarked)
-        )
-      }
-      
-      if (filters.minRating) {
-        results = results.filter(conv => 
-          conv.messages?.some(msg => 
-            msg.averageRating && msg.averageRating >= filters.minRating!
-          )
-        )
-      }
-
-      setSearchResults(results)
-      onResultsChange?.(results)
-    } catch (error) {
-      console.error('Search failed:', error)
-    }
+  const handleSearch = () => {
+    // Implement search logic here
+    console.log("Searching with filters:", filters)
   }
 
-  const updateFilter = (key: keyof SearchFilters, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }))
+  const handleTagToggle = (tag: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      tags: prev.tags.includes(tag) ? prev.tags.filter((t) => t !== tag) : [...prev.tags, tag],
+    }))
   }
 
   const clearFilters = () => {
-    setFilters({ query: '' })
-    setShowAdvancedFilters(false)
+    setFilters({
+      query: "",
+      dateRange: "all",
+      tags: [],
+      status: "all",
+    })
   }
 
-  const getActiveFilterCount = () => {
-    let count = 0
-    if (filters.status) count++
-    if (filters.dateRange) count++
-    if (filters.hasBookmarks) count++
-    if (filters.minRating) count++
-    if (filters.projectId) count++
-    return count
-  }
+  const hasActiveFilters =
+    filters.query || filters.dateRange !== "all" || filters.tags.length > 0 || filters.status !== "all"
 
   return (
-    <div className={cn("space-y-4", className)}>
-      {/* Main Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#656176] dark:text-[#DECDF5]" />
-        <Input
-          placeholder="Search conversations, messages, or topics..."
-          value={filters.query}
-          onChange={(e) => updateFilter('query', e.target.value)}
-          className="pl-10 pr-20 border-[#DECDF5] dark:border-[#656176]"
-        />
-        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className={cn(
-              "h-7 px-2",
-              showAdvancedFilters && "bg-[#1B998B]/10 text-[#1B998B]"
-            )}
-          >
-            <SlidersHorizontal className="h-3 w-3" />
-            {getActiveFilterCount() > 0 && (
-              <Badge variant="secondary" className="ml-1 h-4 w-4 p-0 text-xs">
-                {getActiveFilterCount()}
-              </Badge>
-            )}
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Search className="h-5 w-5" />
+          Search Conversations
+        </CardTitle>
+        <CardDescription>Find specific conversations using keywords, tags, or filters</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Search Input */}
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <Input
+              placeholder="Search conversations..."
+              value={filters.query}
+              onChange={(e) => setFilters((prev) => ({ ...prev, query: e.target.value }))}
+              className="w-full"
+            />
+          </div>
+          <Button onClick={handleSearch}>
+            <Search className="h-4 w-4 mr-2" />
+            Search
           </Button>
         </div>
-      </div>
 
-      {/* Advanced Filters */}
-      {showAdvancedFilters && (
-        <div className="p-4 bg-[#F8F1FF] dark:bg-[#656176]/30 rounded-lg border border-[#DECDF5] dark:border-[#656176] space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-[#534D56] dark:text-[#F8F1FF]">
-              Advanced Filters
-            </h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="h-7 px-2 text-[#656176] dark:text-[#DECDF5]"
-            >
-              <X className="h-3 w-3 mr-1" />
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Filters:</span>
+          </div>
+
+          <Select
+            value={filters.dateRange}
+            onValueChange={(value) => setFilters((prev) => ({ ...prev, dateRange: value }))}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Date range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All time</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="week">This week</SelectItem>
+              <SelectItem value="month">This month</SelectItem>
+              <SelectItem value="year">This year</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={filters.status} onValueChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+              <SelectItem value="bookmarked">Bookmarked</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {hasActiveFilters && (
+            <Button variant="outline" size="sm" onClick={clearFilters}>
+              <X className="h-4 w-4 mr-1" />
               Clear
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Status Filter */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-[#534D56] dark:text-[#F8F1FF]">
-                Status
-              </label>
-              <Select
-                value={filters.status || ''}
-                onValueChange={(value) => updateFilter('status', value || undefined)}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Any status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Any status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                  <SelectItem value="escalated">Escalated</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Date Range Filter */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-[#534D56] dark:text-[#F8F1FF]">
-                Date Range
-              </label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="h-8 text-xs justify-start font-normal"
-                  >
-                    <Calendar className="h-3 w-3 mr-2" />
-                    {filters.dateRange ? (
-                      `${format(filters.dateRange.from, 'MMM dd')} - ${format(filters.dateRange.to, 'MMM dd')}`
-                    ) : (
-                      'Select dates'
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <CalendarComponent
-                    mode="range"
-                    selected={filters.dateRange}
-                    onSelect={(range) => updateFilter('dateRange', range)}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Rating Filter */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-[#534D56] dark:text-[#F8F1FF]">
-                Min Rating
-              </label>
-              <Select
-                value={filters.minRating?.toString() || ''}
-                onValueChange={(value) => updateFilter('minRating', value ? parseFloat(value) : undefined)}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Any rating" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Any rating</SelectItem>
-                  <SelectItem value="4">4+ stars</SelectItem>
-                  <SelectItem value="3">3+ stars</SelectItem>
-                  <SelectItem value="2">2+ stars</SelectItem>
-                  <SelectItem value="1">1+ stars</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Toggle Filters */}
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={filters.hasBookmarks ? "default" : "outline"}
-              size="sm"
-              onClick={() => updateFilter('hasBookmarks', !filters.hasBookmarks)}
-              className="h-7 text-xs"
-            >
-              <Bookmark className="h-3 w-3 mr-1" />
-              Has Bookmarks
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Search Results Summary */}
-      {filters.query && (
-        <div className="flex items-center justify-between text-sm text-[#656176] dark:text-[#DECDF5]">
-          <span>
-            {isLoadingConversations ? 'Searching...' : `${searchResults.length} conversations found`}
-          </span>
-          {searchResults.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => updateFilter('query', '')}
-              className="h-6 px-2 text-xs"
-            >
-              Clear search
             </Button>
           )}
         </div>
-      )}
 
-      {/* Quick Filter Tags */}
-      <div className="flex flex-wrap gap-2">
-        {filters.status && (
-          <Badge 
-            variant="secondary" 
-            className="text-xs cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30"
-            onClick={() => updateFilter('status', undefined)}
-          >
-            Status: {filters.status}
-            <X className="h-3 w-3 ml-1" />
-          </Badge>
+        {/* Tags */}
+        <div className="space-y-2">
+          <span className="text-sm font-medium">Tags:</span>
+          <div className="flex flex-wrap gap-2">
+            {availableTags.map((tag) => (
+              <Badge
+                key={tag}
+                variant={filters.tags.includes(tag) ? "default" : "outline"}
+                className="cursor-pointer hover:bg-primary/80"
+                onClick={() => handleTagToggle(tag)}
+              >
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Active Filters Display */}
+        {hasActiveFilters && (
+          <div className="pt-2 border-t">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Active filters:</span>
+              {filters.query && <Badge variant="secondary">Query: "{filters.query}"</Badge>}
+              {filters.dateRange !== "all" && <Badge variant="secondary">Date: {filters.dateRange}</Badge>}
+              {filters.status !== "all" && <Badge variant="secondary">Status: {filters.status}</Badge>}
+              {filters.tags.map((tag) => (
+                <Badge key={tag} variant="secondary">
+                  Tag: {tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
         )}
-        
-        {filters.dateRange && (
-          <Badge 
-            variant="secondary" 
-            className="text-xs cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30"
-            onClick={() => updateFilter('dateRange', undefined)}
-          >
-            <Calendar className="h-3 w-3 mr-1" />
-            Date range
-            <X className="h-3 w-3 ml-1" />
-          </Badge>
-        )}
-        
-        {filters.hasBookmarks && (
-          <Badge 
-            variant="secondary" 
-            className="text-xs cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30"
-            onClick={() => updateFilter('hasBookmarks', false)}
-          >
-            <Bookmark className="h-3 w-3 mr-1" />
-            Has bookmarks
-            <X className="h-3 w-3 ml-1" />
-          </Badge>
-        )}
-        
-        {filters.minRating && (
-          <Badge 
-            variant="secondary" 
-            className="text-xs cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30"
-            onClick={() => updateFilter('minRating', undefined)}
-          >
-            <Star className="h-3 w-3 mr-1" />
-            {filters.minRating}+ stars
-            <X className="h-3 w-3 ml-1" />
-          </Badge>
-        )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

@@ -1,59 +1,66 @@
-import type { Metadata } from "next"
 import { Suspense } from "react"
 import { MilestoneAnalytics } from "@/components/milestones/milestone-analytics"
-import { MilestoneProgressComparison } from "@/components/milestones/milestone-progress-comparison"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
-export const metadata: Metadata = {
-  title: "Milestone Analytics | FYP Platform",
-  description: "Analyze your milestone progress with detailed analytics and comparisons",
-}
-
-function AnalyticsTabContent() {
+function AnalyticsContent() {
   return (
-    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-      <MilestoneAnalytics />
-    </Suspense>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">Milestone Analytics</h1>
+        <p className="text-muted-foreground">Track your progress and analyze milestone completion patterns</p>
+      </div>
+
+      <Suspense fallback={<AnalyticsLoadingSkeleton />}>
+        <MilestoneAnalytics />
+      </Suspense>
+    </div>
   )
 }
 
-function ComparisonTabContent() {
+function AnalyticsLoadingSkeleton() {
   return (
-    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-      <MilestoneProgressComparison />
-    </Suspense>
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Skeleton className="h-4 w-[100px]" />
+              <Skeleton className="h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-[60px] mb-2" />
+              <Skeleton className="h-3 w-[120px]" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-[200px]" />
+            <Skeleton className="h-4 w-[300px]" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[300px] w-full" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-[200px]" />
+            <Skeleton className="h-4 w-[300px]" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[300px] w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }
 
 export default function MilestoneAnalyticsPage() {
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col gap-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Milestone Analytics</h1>
-          <p className="text-muted-foreground">
-            Analyze your progress with detailed insights and performance comparisons
-          </p>
-        </div>
-
-        {/* Analytics Views */}
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="overview">Progress Overview</TabsTrigger>
-            <TabsTrigger value="comparison">Progress Comparison</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="mt-6">
-            <AnalyticsTabContent />
-          </TabsContent>
-
-          <TabsContent value="comparison" className="mt-6">
-            <ComparisonTabContent />
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
-  )
+  return <AnalyticsContent />
 }

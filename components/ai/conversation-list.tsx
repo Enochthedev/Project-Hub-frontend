@@ -1,253 +1,278 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useAIAssistantStore } from "@/lib/stores/ai-assistant-store"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { 
-  MessageCircle, 
-  Search, 
-  Plus, 
-  Archive, 
-  AlertTriangle,
-  Clock,
-  Filter,
-  MoreVertical
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Conversation } from "@/lib/api/types"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { MessageSquare, Calendar, Clock, Trash2, Archive, Star } from "lucide-react"
+import { formatDistanceToNow } from "date-fns"
 
-interface ConversationListProps {
-  onConversationSelect: (conversation: Conversation) => void
-  onNewConversation: () => void
-  selectedConversationId?: string
-  className?: string
+interface Conversation {
+  id: string
+  title: string
+  preview: string
+  messageCount: number
+  lastActivity: string
+  createdAt: string
+  isBookmarked: boolean
+  isArchived: boolean
+  tags: string[]
 }
 
-export function ConversationList({ 
-  onConversationSelect, 
-  onNewConversation, 
-  selectedConversationId,
-  className 
-}: ConversationListProps) {
-  const {
-    conversations,
-    isLoadingConversations,
-    conversationError,
-    conversationFilters,
-    loadConversations,
-    searchConversations,
-  } = useAIAssistantStore()
-
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
+export function ConversationList() {
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!conversations.length && !isLoadingConversations) {
-      loadConversations()
+    // Simulate API call
+    const fetchConversations = async () => {
+      setIsLoading(true)
+
+      // Mock data - replace with actual API call
+      const mockConversations: Conversation[] = [
+        {
+          id: "1",
+          title: "Project Planning Discussion",
+          preview: "Can you help me create a timeline for my web development project?",
+          messageCount: 15,
+          lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+          isBookmarked: true,
+          isArchived: false,
+          tags: ["planning", "web-dev"],
+        },
+        {
+          id: "2",
+          title: "Machine Learning Concepts",
+          preview: "What are the key differences between supervised and unsupervised learning?",
+          messageCount: 8,
+          lastActivity: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
+          createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+          isBookmarked: false,
+          isArchived: false,
+          tags: ["ml", "concepts"],
+        },
+        {
+          id: "3",
+          title: "Database Design Help",
+          preview: "I need help designing a database schema for my e-commerce application.",
+          messageCount: 22,
+          lastActivity: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week ago
+          isBookmarked: true,
+          isArchived: false,
+          tags: ["database", "design"],
+        },
+        {
+          id: "4",
+          title: "React Best Practices",
+          preview: "What are some best practices for state management in React applications?",
+          messageCount: 12,
+          lastActivity: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+          createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+          isBookmarked: false,
+          isArchived: false,
+          tags: ["react", "best-practices"],
+        },
+        {
+          id: "5",
+          title: "API Integration Questions",
+          preview: "How do I handle authentication when integrating with third-party APIs?",
+          messageCount: 6,
+          lastActivity: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+          createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago
+          isBookmarked: false,
+          isArchived: true,
+          tags: ["api", "auth"],
+        },
+      ]
+
+      setTimeout(() => {
+        setConversations(mockConversations)
+        setIsLoading(false)
+      }, 1000)
     }
-  }, [conversations.length, isLoadingConversations, loadConversations])
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query)
-    searchConversations({
-      ...conversationFilters,
-      search: query || undefined,
-    })
+    fetchConversations()
+  }, [])
+
+  const handleBookmark = (conversationId: string) => {
+    setConversations((prev) =>
+      prev.map((conv) => (conv.id === conversationId ? { ...conv, isBookmarked: !conv.isBookmarked } : conv)),
+    )
   }
 
-  const handleStatusFilter = (status: string) => {
-    setStatusFilter(status)
-    searchConversations({
-      ...conversationFilters,
-      status: status === "all" ? undefined : status as any,
-    })
+  const handleArchive = (conversationId: string) => {
+    setConversations((prev) =>
+      prev.map((conv) => (conv.id === conversationId ? { ...conv, isArchived: !conv.isArchived } : conv)),
+    )
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-      case 'archived':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
-      case 'escalated':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-      default:
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-    }
+  const handleDelete = (conversationId: string) => {
+    setConversations((prev) => prev.filter((conv) => conv.id !== conversationId))
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <MessageCircle className="h-3 w-3" />
-      case 'archived':
-        return <Archive className="h-3 w-3" />
-      case 'escalated':
-        return <AlertTriangle className="h-3 w-3" />
-      default:
-        return <MessageCircle className="h-3 w-3" />
-    }
+  if (isLoading) {
+    return <ConversationListSkeleton />
   }
 
-  const formatLastMessageTime = (timestamp: string) => {
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / (1000 * 60))
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-    if (diffMins < 1) return 'Just now'
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffHours < 24) return `${diffHours}h ago`
-    if (diffDays < 7) return `${diffDays}d ago`
-    return date.toLocaleDateString()
-  }
+  const activeConversations = conversations.filter((conv) => !conv.isArchived)
+  const archivedConversations = conversations.filter((conv) => conv.isArchived)
 
   return (
-    <div className={cn("flex flex-col h-full", className)}>
-      {/* Header */}
-      <div className="p-4 border-b border-[#DECDF5] dark:border-[#656176]">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-[#534D56] dark:text-[#F8F1FF]">
-            Conversations
-          </h2>
-          <Button
-            onClick={onNewConversation}
-            size="sm"
-            className="bg-[#1B998B] hover:bg-[#1B998B]/90"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New
-          </Button>
-        </div>
-
-        {/* Search */}
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#656176] dark:text-[#DECDF5]" />
-          <Input
-            placeholder="Search conversations..."
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="pl-10 border-[#DECDF5] dark:border-[#656176]"
-          />
-        </div>
-
-        {/* Filters */}
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-[#656176] dark:text-[#DECDF5]" />
-          <Select value={statusFilter} onValueChange={handleStatusFilter}>
-            <SelectTrigger className="w-32 h-8 text-xs border-[#DECDF5] dark:border-[#656176]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
-              <SelectItem value="escalated">Escalated</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Conversation List */}
-      <ScrollArea className="flex-1">
-        {isLoadingConversations ? (
-          <div className="p-4 text-center text-[#656176] dark:text-[#DECDF5]">
-            Loading conversations...
-          </div>
-        ) : conversationError ? (
-          <div className="p-4 text-center text-red-600 dark:text-red-400">
-            {conversationError}
-          </div>
-        ) : conversations.length === 0 ? (
-          <div className="p-4 text-center text-[#656176] dark:text-[#DECDF5]">
-            <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No conversations yet</p>
-            <p className="text-xs mt-1">Start a new conversation to get help</p>
-          </div>
+    <div className="space-y-6">
+      {/* Active Conversations */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Active Conversations</h2>
+        {activeConversations.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground text-center">
+                No active conversations yet. Start a new conversation with the AI assistant!
+              </p>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="p-2">
-            {conversations.map((conversation, index) => (
-              <div key={conversation.id}>
-                <div
-                  className={cn(
-                    "p-3 rounded-lg cursor-pointer transition-all hover:bg-[#F8F1FF] dark:hover:bg-[#656176]/30",
-                    selectedConversationId === conversation.id && 
-                    "bg-[#1B998B]/10 border border-[#1B998B]/20"
-                  )}
-                  onClick={() => onConversationSelect(conversation)}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-medium text-[#534D56] dark:text-[#F8F1FF] text-sm line-clamp-1">
-                      {conversation.title || 'Untitled Conversation'}
-                    </h3>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                          <MoreVertical className="h-3 w-3" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Archive className="h-4 w-4 mr-2" />
-                          Archive
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge 
-                      variant="secondary" 
-                      className={cn("text-xs", getStatusColor(conversation.status))}
-                    >
-                      {getStatusIcon(conversation.status)}
-                      <span className="ml-1 capitalize">{conversation.status}</span>
-                    </Badge>
-                    <div className="flex items-center text-xs text-[#656176] dark:text-[#DECDF5]">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {formatLastMessageTime(conversation.lastMessageAt)}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-[#656176] dark:text-[#DECDF5]">
-                    <span>{conversation.messageCount} messages</span>
-                    {conversation.projectId && (
-                      <Badge variant="outline" className="text-xs">
-                        Project
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                {index < conversations.length - 1 && (
-                  <Separator className="my-2 bg-[#DECDF5] dark:bg-[#656176]" />
-                )}
-              </div>
+          <div className="space-y-4">
+            {activeConversations.map((conversation) => (
+              <ConversationCard
+                key={conversation.id}
+                conversation={conversation}
+                onBookmark={handleBookmark}
+                onArchive={handleArchive}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
         )}
-      </ScrollArea>
+      </div>
+
+      {/* Archived Conversations */}
+      {archivedConversations.length > 0 && (
+        <div>
+          <Separator className="my-6" />
+          <h2 className="text-xl font-semibold mb-4">Archived Conversations</h2>
+          <div className="space-y-4">
+            {archivedConversations.map((conversation) => (
+              <ConversationCard
+                key={conversation.id}
+                conversation={conversation}
+                onBookmark={handleBookmark}
+                onArchive={handleArchive}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ConversationCard({
+  conversation,
+  onBookmark,
+  onArchive,
+  onDelete,
+}: {
+  conversation: Conversation
+  onBookmark: (id: string) => void
+  onArchive: (id: string) => void
+  onDelete: (id: string) => void
+}) {
+  return (
+    <Card className={conversation.isArchived ? "opacity-60" : ""}>
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <div className="space-y-1 flex-1">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg">{conversation.title}</CardTitle>
+              {conversation.isBookmarked && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
+              {conversation.isArchived && <Badge variant="secondary">Archived</Badge>}
+            </div>
+            <CardDescription className="flex items-center gap-4 text-sm">
+              <span className="flex items-center gap-1">
+                <MessageSquare className="h-3 w-3" />
+                {conversation.messageCount} messages
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {formatDistanceToNow(new Date(conversation.lastActivity), { addSuffix: true })}
+              </span>
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                Created {formatDistanceToNow(new Date(conversation.createdAt), { addSuffix: true })}
+              </span>
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-muted-foreground mb-4 line-clamp-2">{conversation.preview}</p>
+
+        <div className="flex items-center justify-between">
+          <div className="flex gap-2">
+            {conversation.tags.map((tag) => (
+              <Badge key={tag} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onBookmark(conversation.id)}
+              className={conversation.isBookmarked ? "text-yellow-600" : ""}
+            >
+              <Star className={`h-4 w-4 ${conversation.isBookmarked ? "fill-current" : ""}`} />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => onArchive(conversation.id)}>
+              <Archive className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(conversation.id)}
+              className="text-red-600 hover:text-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ConversationListSkeleton() {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Card key={i}>
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <div className="space-y-2 flex-1">
+                <div className="h-5 w-[250px] bg-muted animate-pulse rounded" />
+                <div className="h-4 w-[300px] bg-muted animate-pulse rounded" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="h-4 w-full bg-muted animate-pulse rounded" />
+              <div className="h-4 w-[80%] bg-muted animate-pulse rounded" />
+              <div className="flex gap-2 mt-4">
+                <div className="h-6 w-[60px] bg-muted animate-pulse rounded" />
+                <div className="h-6 w-[80px] bg-muted animate-pulse rounded" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   )
 }
