@@ -1,35 +1,44 @@
 "use client"
 
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useAuthStore } from '@/lib/stores/auth-store'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2 } from 'lucide-react'
-import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useAuthStore } from "@/lib/stores/auth-store"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2 } from "lucide-react"
+import { z } from "zod"
+
+// Define the schema directly in the component to avoid import issues
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  rememberMe: z.boolean().default(false),
+})
+
+type LoginFormData = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
   const router = useRouter()
   const { login, isLoading, error, clearError } = useAuthStore()
-  
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
-    watch
+    watch,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
       rememberMe: false,
-    }
+    },
   })
 
   const onSubmit = async (data: LoginFormData) => {
@@ -37,10 +46,10 @@ export default function LoginPage() {
 
     try {
       await login(data.email, data.password, data.rememberMe)
-      router.push('/explore') // Redirect to explore page after successful login
+      router.push("/explore") // Redirect to explore page after successful login
     } catch (error) {
       // Error is handled by the store
-      console.error('Login failed:', error)
+      console.error("Login failed:", error)
     }
   }
 
@@ -49,7 +58,7 @@ export default function LoginPage() {
       <div className="mx-auto max-w-md">
         <h1 className="text-center text-3xl font-bold text-[#534D56] dark:text-[#F8F1FF]">Log in to Project Hub</h1>
         <p className="mt-2 text-center text-[#656176] dark:text-[#DECDF5]">Welcome back! Please enter your details.</p>
-        
+
         <div className="mt-8 rounded-lg border border-[#DECDF5] bg-white p-6 shadow-sm dark:border-[#656176] dark:bg-[#656176]/30">
           {error && (
             <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
@@ -66,13 +75,11 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 autoComplete="email"
-                {...register('email')}
+                {...register("email")}
                 className="border-[#DECDF5] bg-white text-[#534D56] focus:border-[#1B998B] focus:ring-[#1B998B] dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF]"
                 disabled={isLoading}
               />
-              {errors.email && (
-                <p className="text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -88,20 +95,18 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 autoComplete="current-password"
-                {...register('password')}
+                {...register("password")}
                 className="border-[#DECDF5] bg-white text-[#534D56] focus:border-[#1B998B] focus:ring-[#1B998B] dark:border-[#656176] dark:bg-[#656176]/50 dark:text-[#F8F1FF]"
                 disabled={isLoading}
               />
-              {errors.password && (
-                <p className="text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
-              )}
+              {errors.password && <p className="text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>}
             </div>
 
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="rememberMe"
-                checked={watch('rememberMe')}
-                onCheckedChange={(checked) => setValue('rememberMe', checked as boolean)}
+                checked={watch("rememberMe")}
+                onCheckedChange={(checked) => setValue("rememberMe", checked as boolean)}
                 className="border-[#DECDF5] text-[#1B998B] focus:ring-[#1B998B] dark:border-[#656176]"
                 disabled={isLoading}
               />
@@ -121,7 +126,7 @@ export default function LoginPage() {
                   Logging in...
                 </>
               ) : (
-                'Log in'
+                "Log in"
               )}
             </Button>
           </form>
