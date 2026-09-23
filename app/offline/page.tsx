@@ -2,14 +2,9 @@ import { Wifi, RefreshCw, Home } from "lucide-react"
 import Link from "next/link"
 import { TouchButton } from "@/components/ui/touch-button"
 import { ResponsiveContainer } from "@/components/ui/responsive-container"
+import { RetryButton } from "./retry-button"
 
 export default function OfflinePage() {
-  const handleRetry = () => {
-    if (typeof window !== 'undefined') {
-      window.location.reload()
-    }
-  }
-
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#F8F1FF] to-[#DECDF5] dark:from-[#534D56] dark:to-[#656176] flex items-center justify-center">
       <ResponsiveContainer maxWidth="md" className="text-center">
@@ -60,13 +55,7 @@ export default function OfflinePage() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <TouchButton
-              onClick={handleRetry}
-              className="bg-[#1B998B] hover:bg-[#1B998B]/90 text-white px-8 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:shadow-xl"
-            >
-              <RefreshCw className="w-5 h-5 mr-2" />
-              Try Again
-            </TouchButton>
+            <RetryButton />
             
             <TouchButton
               variant="outline"
