@@ -105,7 +105,7 @@ export function SupervisorWorkloadChart({
               <div className="flex items-center gap-2 text-red-600">
                 <AlertTriangle className="h-4 w-4" />
                 <span className="text-sm">
-                  {overloadedSupervisors} supervisor{overloadedSupervisors > 1 ? 's' : ''} overloaded (>90%)
+                  {overloadedSupervisors} supervisor{overloadedSupervisors > 1 ? 's' : ''} overloaded (&gt;90%)
                 </span>
               </div>
             </div>
