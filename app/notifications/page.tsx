@@ -35,7 +35,7 @@ interface Notification {
   priority: "low" | "medium" | "high"
   timestamp: string
   actionUrl?: string
-  metadata: {
+  metadata?: {
     sender?: {
       name: string
       avatar?: string
@@ -402,11 +402,11 @@ export default function NotificationsPage() {
                             }}
                           />
 
-                          {notification.metadata.sender?.avatar && (
+                          {notification.metadata?.sender?.avatar && (
                             <Avatar className="h-8 w-8">
-                              <AvatarImage src={notification.metadata.sender.avatar || "/placeholder.svg"} />
+                              <AvatarImage src={notification.metadata.sender?.avatar || "/placeholder.svg"} />
                               <AvatarFallback>
-                                {notification.metadata.sender.name
+                                {(notification.metadata.sender?.name ?? "")
                                   .split(" ")
                                   .map((n) => n[0])
                                   .join("")}
